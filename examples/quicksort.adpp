@@ -34,8 +34,9 @@ program algorithm {
 	
 	// FUNÇÃO PRINCIPAL
 	func main(): void {
+        string alg = "Algorithm \"quickSort\"";
 		array<int> arr = {12, 11, 13, 5, 6, 7};
-		quickSort(arr, 0, arr.length - 1)
+		quickSort(arr, 0, arr.length - 1);
 	}
     
 }
