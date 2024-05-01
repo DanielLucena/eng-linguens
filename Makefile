@@ -6,7 +6,7 @@ build: create_bin_directory
 	@echo "BUILDING LEXICAL ANALYZER"
 
 	lex -o bin/adpp.yy.c adpp_lexer.l
-	gcc -o ADPP bin/adpp.yy.c -ll
+	gcc -o ADPP bin/adpp.yy.c 
 
 run_all: clean build run_main
 	@echo "RUNNING snippet.adpp\n"
