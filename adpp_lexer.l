@@ -1,7 +1,7 @@
 %{
   #include <stdio.h>
 
-  void removeSlashN(char*); 
+  void removeSlashN(char*);
 %}
 
 %%
