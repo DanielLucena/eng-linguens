@@ -1,19 +1,19 @@
 BIN_DIRECTORY := bin
 
-all: clean run
-	@echo "RUNNING quicksort.adpp"
+all: run_main
 	
-	./ADPP < examples/snippet.adpp
-
 build: create_bin_directory
 	@echo "BUILDING LEXICAL ANALYZER"
 
 	lex -o bin/adpp.yy.c adpp_lexer.l
 	gcc -o ADPP bin/adpp.yy.c -ll
 
-run: clean build
-	@echo "RUNNING quicksort.adpp"
-	
+run_all: clean build run_main
+	@echo "RUNNING snippet.adpp\n"
+	./ADPP < examples/snippet.adpp
+
+run_main: clean build
+	@echo "RUNNING quicksort.adpp\n"
 	./ADPP < examples/quicksort.adpp
 
 clean:
