@@ -1,10 +1,12 @@
 %{
-  #include <stdio.h>  
+  #include <stdio.h>
+
+  void removeSlashN(char*); 
 %}
 
 %%
 
-[ \t\n\r]               ;
+[ \t\n\r]              ;
 
 "program"             {printf("PROGRAM\n");}
 "func"                {printf("SUBPROGRAM\n");}
@@ -73,6 +75,8 @@
 "static"              {printf("STATIC\n");}
 "return"              {printf("RETURN\n");}
 
+\/\/.*\n?             {removeSlashN(yytext); printf("COMMENT(%s)\n", yytext);}
+
 [0-9]+\.[0-9]+        {printf("DOUBLE(%s)\n",yytext);}
 
 [0-9]+                {printf("INTEGER(%s)\n",yytext);}
@@ -83,21 +87,29 @@
 
 [a-zA-Z][a-zA-Z0-9]*  {printf("ID(%s)\n",yytext);}
 
-\/\/.*$?              {printf("COMENTARIO(%s)\n", yytext);}
-
-.                     {printf("Invalid character(%s)\n", yytext);}
-
-
-
+.                     {printf("INVALID_CARACTERE(%s)\n", yytext);}
 
 %%
+
 
 #ifndef yywrap
    int yywrap (void) {return 1;}
 #endif
 
+#ifndef removeSlashN
+  void removeSlashN(char *str) {
+      int i, j;
+      for (i = 0, j = 0; str[i] != '\0'; i++) {
+          if (str[i] != '\n') {
+              str[j++] = str[i];
+          }
+      }
+      str[j] = '\0';
+  }
+#endif
+
 int main(void)
 {
-  yylex();  
+  yylex();
   return 0;
 }
