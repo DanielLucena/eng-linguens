@@ -1,6 +1,9 @@
 %{
   #include <stdio.h>
-
+  #include "y.tab.h"
+  
+  extern int yyerror (char *msg); 
+  
   void removeSlashN(char*);
 %}
 
@@ -8,50 +11,50 @@
 
 [ \t\n\r]              ;
 
-"program"             return("PROGRAM\n");
-"func"                {return("SUBPROGRAM\n");}
+"program"             return(PROGRAM);
+"func"                {return(SUBPROGRAM);}
 
-"if"                  {return("IF\n");}
-"else"                {return("ELSE\n");}
+"if"                  {return(IF);}
+"else"                {return(ELSE);}
 
-"switch"              {return("SWITCH\n");}
-"case"                {return("CASE\n");}
-"break"               {return("BREAK\n");}
-"continue"            {return("CONTINUE\n");}
+"switch"              {return(SWITCH);}
+"case"                {return(CASE);}
+"break"               {return(BREAK);}
+"continue"            {return(CONTINUE);}
 
-"for"                 {return("FOR\n");}
+"for"                 {return(FOR);}
 
-"do"                  {return("DO\n");}
-"while"               {return("WHILE\n");}
+"do"                  {return(DO);}
+"while"               {return(WHILE);}
 
-"try"                 {return("TRY\n");}
-"catch"               {return("CATCH\n");}
-"finally"             {return("FINALLY\n");}
-"throw"               {return("THROW\n");}
+"try"                 {return(TRY);}
+"catch"               {return(CATCH);}
+"finally"             {return(FINALLY);}
+"throw"               {return(THROW);}
 
 
 ";"                   return(yytext[0]); // retorna o caractere consumido, isso pode ser feito para tokens que sejam de apenas um char
 ":"                   return(yytext[0]);
-"=="                  {return("COMPARISON\n");}
-"!="                  {return("DIFFERENT\n");}
+"=="                  {return(COMPARISON);}
+"!="                  {return(DIFFERENT);}
 "="                   return(yytext[0]);
 ","                   return(yytext[0]);
 "."                   return(yytext[0]);
-"<"                   {return("LESS_THAN\n");}
-">"                   {return("MORE_THAN\n");}
-"!"                   {return("FACTORIAL\n");}
-"?"                   {return("TERNARY\n");}
-"#"                   {return("HASH\n");}
-"&&"                  {return("AND\n");}
-"||"                  {return("OR\n");}
-"|"                   {return("PIPE\n");}
-"&"                   {return("AMPERSAND\n");}
-"+"                   {return("PLUS\n");}
-"-"                   {return("MINUS\n");}
-"**"                  {return("POWER\n");}
-"*"                   {return("TIMES\n");}
-"/"                   {return("SPLIT\n");}
-"%"                   {return("MOD\n");}
+"<"                   {return(LESS_THAN);}
+">"                   {return(MORE_THAN);}
+"!"                   {return(FACTORIAL);}
+"?"                   {return(TERNARY);}
+"#"                   {return(HASH);}
+"&&"                  {return(AND);}
+"||"                  {return(OR);}
+"|"                   {return(PIPE);}
+"&"                   {return(AMPERSAND);}
+"+"                   {return(PLUS);}
+"-"                   {return(MINUS);}
+"**"                  {return(POWER);}
+"*"                   {return(TIMES);}
+"/"                   {return(SPLIT);}
+"%"                   {return(MOD);}
 
 "("                   return(yytext[0]); 
 ")"                   return(yytext[0]);
@@ -60,34 +63,49 @@
 "{"                   return(yytext[0]);
 "}"                   return(yytext[0]);
 
-"int"                 {return("TYPE(INT)\n");}
-"decimal"             {return("TYPE(DECIMAL)\n");}
-"string"              {return("TYPE(STRING)\n");}
-"bool"                {return("TYPE(BOOLEAN)\n");}
-"char"                {return("TYPE(CARACTER)\n");}
-"array"               {return("ARRAY\n");}
-"rec"                 {return("RECORD\n");}
-"struct"              {return("STRUCT\n");}
-"dict"                {return("MAP\n");}
-"void"                {return("VOID\n");}
+"int"                 {yylval.sValue = strdup("int"); 
+                       return TYPE;}
+"decimal"             {yylval.sValue = strdup("decimal"); 
+                       return TYPE;}
+"string"              {yylval.sValue = strdup("string"); 
+                       return TYPE;}
+"bool"                {yylval.sValue = strdup("bool"); 
+                       return TYPE;}
+"char"                {yylval.sValue = strdup("char"); 
+                       return TYPE;}
+"array"               {yylval.sValue = strdup("array"); 
+                       return TYPE;}
+"rec"                 {yylval.sValue = strdup("rec"); 
+                       return TYPE;}
+"struct"              {yylval.sValue = strdup("arra"); 
+                       return TYPE;}
+"dict"                {return(MAP);}
+"void"                {return(VOID);}
 
-"import"              {return("IMPORT\n");}
-"static"              {return("STATIC\n");}
-"return"              {return("RETURN\n");}
+"import"              {return(IMPORT);}
+"static"              {return(STATIC);}
+"return"              {return(RETURN);}
 
-\/\/.*\n?             {removeSlashN(yytext); return("COMMENT(%s)\n", yytext);}
+\/\/.*\n?             { removeSlashN(yytext);
+                        yylval.sValue = yytext;
+                        return COMMENT;}
 
-[0-9]+\.[0-9]+        {return("DOUBLE(%s)\n",yytext);}
+[0-9]+\.[0-9]+        {yylval.fValue = atof(yytext); 
+                       return DOUBLE;}
 
-[0-9]+                {return("INTEGER(%s)\n",yytext);}
+[0-9]+                {yylval.iValue = atoi(yytext); 
+                       return INTEGER;}
 
-(\"\")|(\".*?[^\\]\") {return("STRING(%s)\n",yytext);}
+(\"\")|(\".*?[^\\]\") {yylval.sValue = yytext; 
+                       return STRING;}
 
-'.'                   {return("CARACTERE(%s)\n", yytext);}
+'.'                   {yylval.cValue = yytext[0]; 
+                       return CARACTERE;}
 
-[a-zA-Z][a-zA-Z0-9]*  {return("ID(%s)\n",yytext);}
+[a-zA-Z][a-zA-Z0-9]*  {yylval.sValue = strdup(yytext); 
+                       return ID;}
 
-.                     {return("INVALID_CARACTERE(%s)\n", yytext);}
+.                     {yyerror("invalid character");}
 
 %%
 

@@ -20,11 +20,15 @@ extern char * yytext;
 %token <iValue> INTEGER
 %token <cValue> CARACTERE
 %token <fValue> DOUBLE
+%token <sValue> STRING
 %token PROGRAM SUBPROGRAM
 
-%token COMPARISON DEFERENT LESS_THAN MORE_THAN PLUS MINUS POWER TIMES SPLIT MOD
+%token COMPARISON DIFFERENT LESS_THAN MORE_THAN PLUS MINUS POWER TIMES SPLIT MOD
+%token FACTORIAL TERNARY HASH 
+%token AND OR PIPE AMPERSAND
+%token MAP VOID IMPORT STATIC COMMENT
 
-%token IF ELSE FOR RETURN
+%token IF ELSE FOR RETURN SWITCH CASE BREAK CONTINUE DO WHILE TRY CATCH FINALLY THROW 
 
 %start program
 %%
@@ -64,7 +68,7 @@ expressions : expression
 binary_expr : expression binary_operator expression;
 
 binary_operator : COMPARISON 
-                |DEFERENT 
+                |DIFFERENT 
                 |LESS_THAN 
                 |MORE_THAN 
                 |PLUS 
