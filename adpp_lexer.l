@@ -8,86 +8,86 @@
 
 [ \t\n\r]              ;
 
-"program"             {printf("PROGRAM\n");}
-"func"                {printf("SUBPROGRAM\n");}
+"program"             return("PROGRAM\n");
+"func"                {return("SUBPROGRAM\n");}
 
-"if"                  {printf("IF\n");}
-"else"                {printf("ELSE\n");}
+"if"                  {return("IF\n");}
+"else"                {return("ELSE\n");}
 
-"switch"              {printf("SWITCH\n");}
-"case"                {printf("CASE\n");}
-"break"               {printf("BREAK\n");}
-"continue"            {printf("CONTINUE\n");}
+"switch"              {return("SWITCH\n");}
+"case"                {return("CASE\n");}
+"break"               {return("BREAK\n");}
+"continue"            {return("CONTINUE\n");}
 
-"for"                 {printf("FOR\n");}
+"for"                 {return("FOR\n");}
 
-"do"                  {printf("DO\n");}
-"while"               {printf("WHILE\n");}
+"do"                  {return("DO\n");}
+"while"               {return("WHILE\n");}
 
-"try"                 {printf("TRY\n");}
-"catch"               {printf("CATCH\n");}
-"finally"             {printf("FINALLY\n");}
-"throw"               {printf("THROW\n");}
+"try"                 {return("TRY\n");}
+"catch"               {return("CATCH\n");}
+"finally"             {return("FINALLY\n");}
+"throw"               {return("THROW\n");}
 
 
-";"                   {printf("SEMICOLON\n");}
-":"                   {printf("COLON\n");}
-"=="                  {printf("COMPARISON\n");}
-"!="                  {printf("DIFFERENT\n");}
-"="                   {printf("ASSIGNMENT\n");}
-","                   {printf("COMMA\n");}
-"."                   {printf("DOT\n");}
-"<"                   {printf("LESS_THAN\n");}
-">"                   {printf("MORE_THAN\n");}
-"!"                   {printf("FACTORIAL\n");}
-"?"                   {printf("TERNARY\n");}
-"#"                   {printf("HASH\n");}
-"&&"                  {printf("AND\n");}
-"||"                  {printf("OR\n");}
-"|"                   {printf("PIPE\n");}
-"&"                   {printf("AMPERSAND\n");}
-"+"                   {printf("PLUS\n");}
-"-"                   {printf("MINUS\n");}
-"**"                  {printf("POWER\n");}
-"*"                   {printf("TIMES\n");}
-"/"                   {printf("SPLIT\n");}
-"%"                   {printf("MOD\n");}
+";"                   return(yytext[0]); // retorna o caractere consumido, isso pode ser feito para tokens que sejam de apenas um char
+":"                   return(yytext[0]);
+"=="                  {return("COMPARISON\n");}
+"!="                  {return("DIFFERENT\n");}
+"="                   return(yytext[0]);
+","                   return(yytext[0]);
+"."                   return(yytext[0]);
+"<"                   {return("LESS_THAN\n");}
+">"                   {return("MORE_THAN\n");}
+"!"                   {return("FACTORIAL\n");}
+"?"                   {return("TERNARY\n");}
+"#"                   {return("HASH\n");}
+"&&"                  {return("AND\n");}
+"||"                  {return("OR\n");}
+"|"                   {return("PIPE\n");}
+"&"                   {return("AMPERSAND\n");}
+"+"                   {return("PLUS\n");}
+"-"                   {return("MINUS\n");}
+"**"                  {return("POWER\n");}
+"*"                   {return("TIMES\n");}
+"/"                   {return("SPLIT\n");}
+"%"                   {return("MOD\n");}
 
-"("                   {printf("LEFT_PARENTHESES\n");}
-")"                   {printf("RIGHT_PARENTHESES\n");}
-"["                   {printf("LEFT_BRACKETS\n");}
-"]"                   {printf("RIGHT_BRACKETS\n");}
-"{"                   {printf("LEFT_BRACE\n");}
-"}"                   {printf("RIGHT_BRACE\n");}
+"("                   return(yytext[0]); 
+")"                   return(yytext[0]);
+"["                   return(yytext[0]);
+"]"                   return(yytext[0]);
+"{"                   return(yytext[0]);
+"}"                   return(yytext[0]);
 
-"int"                 {printf("TYPE(INT)\n");}
-"decimal"             {printf("TYPE(DECIMAL)\n");}
-"string"              {printf("TYPE(STRING)\n");}
-"bool"                {printf("TYPE(BOOLEAN)\n");}
-"char"                {printf("TYPE(CARACTER)\n");}
-"array"               {printf("ARRAY\n");}
-"rec"                 {printf("RECORD\n");}
-"struct"              {printf("STRUCT\n");}
-"dict"                {printf("MAP\n");}
-"void"                {printf("VOID\n");}
+"int"                 {return("TYPE(INT)\n");}
+"decimal"             {return("TYPE(DECIMAL)\n");}
+"string"              {return("TYPE(STRING)\n");}
+"bool"                {return("TYPE(BOOLEAN)\n");}
+"char"                {return("TYPE(CARACTER)\n");}
+"array"               {return("ARRAY\n");}
+"rec"                 {return("RECORD\n");}
+"struct"              {return("STRUCT\n");}
+"dict"                {return("MAP\n");}
+"void"                {return("VOID\n");}
 
-"import"              {printf("IMPORT\n");}
-"static"              {printf("STATIC\n");}
-"return"              {printf("RETURN\n");}
+"import"              {return("IMPORT\n");}
+"static"              {return("STATIC\n");}
+"return"              {return("RETURN\n");}
 
-\/\/.*\n?             {removeSlashN(yytext); printf("COMMENT(%s)\n", yytext);}
+\/\/.*\n?             {removeSlashN(yytext); return("COMMENT(%s)\n", yytext);}
 
-[0-9]+\.[0-9]+        {printf("DOUBLE(%s)\n",yytext);}
+[0-9]+\.[0-9]+        {return("DOUBLE(%s)\n",yytext);}
 
-[0-9]+                {printf("INTEGER(%s)\n",yytext);}
+[0-9]+                {return("INTEGER(%s)\n",yytext);}
 
-(\"\")|(\".*?[^\\]\") {printf("STRING(%s)\n",yytext);}
+(\"\")|(\".*?[^\\]\") {return("STRING(%s)\n",yytext);}
 
-'.'                   {printf("CARACTERE(%s)\n", yytext);}
+'.'                   {return("CARACTERE(%s)\n", yytext);}
 
-[a-zA-Z][a-zA-Z0-9]*  {printf("ID(%s)\n",yytext);}
+[a-zA-Z][a-zA-Z0-9]*  {return("ID(%s)\n",yytext);}
 
-.                     {printf("INVALID_CARACTERE(%s)\n", yytext);}
+.                     {return("INVALID_CARACTERE(%s)\n", yytext);}
 
 %%
 
@@ -107,9 +107,3 @@
       str[j] = '\0';
   }
 #endif
-
-int main(void)
-{
-  yylex();
-  return 0;
-}
