@@ -3,8 +3,8 @@
 program QuickSort {
 
     // Swap Function
-    func swap(int a, int b): void {
-        int temp = a;
+    func swap ( int a , int b ) : void {
+        int temp = a ;
         a = b;
         b = temp;
 	}

@@ -1,0 +1,11 @@
+program declaracao{
+    //declaração
+    int a = 10;
+    
+    //declaração 2
+    int b;
+
+    //atribuição
+    b = a;
+}
+

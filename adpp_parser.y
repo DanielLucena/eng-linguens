@@ -35,18 +35,19 @@ extern char * yytext;
 
 program : PROGRAM ID '{' stmts '}';
 
-stmts : stmt 
+stmts : stmt
       | stmt stmts;
 
 
 func_def : SUBPROGRAM ID '(' params ')' ':' TYPE block;
 
 params : param 
-       | param ',' params;
+       | param ',' params
+       ;
 
 param : TYPE ID;
 
-block : '{' stmt '}'
+block : '{' stmts '}'
 
 expression : ID
            | literal
@@ -57,6 +58,7 @@ expression : ID
 literal : INTEGER
         | DOUBLE
         | CARACTERE
+        | STRING
 
 func_call: ID '(' args ')';
 
@@ -80,12 +82,16 @@ binary_operator : COMPARISON
                 ;
 
 stmt : func_def
-     | expression ;
+     | expression ';'
      | if_stmt
      | for_stmt
-     | return_stmt
-     | atrib
+     | return_stmt ';'
+     | atrib ';'
+     | declaration ';'
      ;
+
+declaration : TYPE atrib
+            | TYPE ID;
 
 atrib : ID  '=' expression;
 
