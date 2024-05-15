@@ -77,18 +77,19 @@
                        return TYPE;}
 "rec"                 {yylval.sValue = strdup("rec"); 
                        return TYPE;}
-"struct"              {yylval.sValue = strdup("arra"); 
+"struct"              {yylval.sValue = strdup("struct"); 
                        return TYPE;}
-"dict"                {return(MAP);}
-"void"                {return(VOID);}
+"dict"                {yylval.sValue = strdup("dict"); 
+                       return TYPE;}
+"void"                {yylval.sValue = strdup("void"); 
+                       return TYPE;}
 
 "import"              {return(IMPORT);}
 "static"              {return(STATIC);}
 "return"              {return(RETURN);}
 
-\/\/.*\n?             { removeSlashN(yytext);
-                        yylval.sValue = yytext;
-                        return COMMENT;}
+\/\/.*\n?              { removeSlashN(yytext); 
+                        printf("COMMENT(%s)\n", yytext);}
 
 [0-9]+\.[0-9]+        {yylval.fValue = atof(yytext); 
                        return DOUBLE;}
@@ -99,7 +100,7 @@
 (\"\")|(\".*?[^\\]\") {yylval.sValue = yytext; 
                        return STRING;}
 
-'.'                   {yylval.cValue = yytext[0]; 
+\'.{1}\'               {yylval.cValue = yytext[1]; 
                        return CARACTERE;}
 
 [a-zA-Z][a-zA-Z0-9]*  {yylval.sValue = strdup(yytext); 
