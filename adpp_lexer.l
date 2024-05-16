@@ -4,12 +4,12 @@
   
   extern int yyerror (char *msg); 
   
-  void removeSlashN(char*);
+  // void removeSlashN(char*);
 %}
 
 %%
 
-[ \t\r]              ;
+[ \t\r]                 ;
 
 \n                    {yylineno++;}
 
@@ -44,8 +44,8 @@
 "."                   return(yytext[0]);
 "<"                   {return(LESS_THAN);}
 ">"                   {return(MORE_THAN);}
-"<="                   {return(LESS_THAN_EQUALS);}
-">="                   {return(MORE_THAN_EQUALS);}
+"<="                  {return(LESS_THAN_EQUALS);}
+">="                  {return(MORE_THAN_EQUALS);}
 "!"                   {return(FACTORIAL);}
 "?"                   {return(TERNARY);}
 "#"                   {return(HASH);}
@@ -94,8 +94,8 @@
 "static"              {return(STATIC);}
 "return"              {return(RETURN);}
 
-\/\/.*\n?              { removeSlashN(yytext); 
-                        printf("COMMENT(%s)\n", yytext);}
+\/\/.*\n?             {printf("COMMENT: %s", yytext);
+                      yylineno++;}
 
 [0-9]+\.[0-9]+        {yylval.fValue = atof(yytext); 
                        return DOUBLE;}
