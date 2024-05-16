@@ -75,6 +75,14 @@ literal         : INTEGER
                 | DOUBLE
                 | CARACTERE
                 | STRING
+                | array_literal
+                ;
+
+literais        : literal
+                | literal ',' literais
+                ;
+
+array_literal   : '{' literais '}'
                 ;
 
 func_call       : ID '(' args ')'

@@ -41,8 +41,9 @@ program QuickSort {
 	
 	// Main Function
 	func main(): void {
-//main
-        array<int> arr = {12, 11, 13, 5, 6, 7}; //ali
+        //antes do array
+        array<int> arr = {12, 11, 13, 5, 6, 7};
+        //depois do array
         quickSort(arr, 0, arr.length - 1);
 
         whiteLine(arr);
