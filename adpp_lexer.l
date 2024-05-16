@@ -75,7 +75,7 @@
 "static"              {printf("STATIC\n");}
 "return"              {printf("RETURN\n");}
 
-\/\/.*\n?             {removeSlashN(yytext); printf("COMMENT(%s)\n", yytext);}
+\/\/.*\n?             {printf("COMMENT(%s)", yytext);}
 
 [0-9]+\.[0-9]+        {printf("DOUBLE(%s)\n",yytext);}
 
@@ -111,5 +111,6 @@
 int main(void)
 {
   yylex();
+  printf("\n");
   return 0;
 }
