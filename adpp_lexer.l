@@ -9,9 +9,11 @@
 
 %%
 
-[ \t\n\r]              ;
+[ \t\r]              ;
 
-"program"             return(PROGRAM);
+\n                    {yylineno++;}
+
+"program"             {return(PROGRAM);}
 "func"                {return(SUBPROGRAM);}
 
 "if"                  {return(IF);}
@@ -42,6 +44,8 @@
 "."                   return(yytext[0]);
 "<"                   {return(LESS_THAN);}
 ">"                   {return(MORE_THAN);}
+"<="                   {return(LESS_THAN_EQUALS);}
+">="                   {return(MORE_THAN_EQUALS);}
 "!"                   {return(FACTORIAL);}
 "?"                   {return(TERNARY);}
 "#"                   {return(HASH);}
@@ -55,6 +59,8 @@
 "*"                   {return(TIMES);}
 "/"                   {return(SPLIT);}
 "%"                   {return(MOD);}
+"++"                  {return(INCREMENT);}
+"--"                  {return(DECREMENT);}
 
 "("                   return(yytext[0]); 
 ")"                   return(yytext[0]);
@@ -64,25 +70,25 @@
 "}"                   return(yytext[0]);
 
 "int"                 {yylval.sValue = strdup("int"); 
-                       return TYPE;}
+                       return PRIMITIVE;}
 "decimal"             {yylval.sValue = strdup("decimal"); 
-                       return TYPE;}
+                       return PRIMITIVE;}
 "string"              {yylval.sValue = strdup("string"); 
-                       return TYPE;}
+                       return PRIMITIVE;}
 "bool"                {yylval.sValue = strdup("bool"); 
-                       return TYPE;}
+                       return PRIMITIVE;}
 "char"                {yylval.sValue = strdup("char"); 
-                       return TYPE;}
+                       return PRIMITIVE;}
 "array"               {yylval.sValue = strdup("array"); 
-                       return TYPE;}
+                       return ARRAY;}
 "rec"                 {yylval.sValue = strdup("rec"); 
-                       return TYPE;}
+                       return PRIMITIVE;}
 "struct"              {yylval.sValue = strdup("struct"); 
-                       return TYPE;}
+                       return PRIMITIVE;}
 "dict"                {yylval.sValue = strdup("dict"); 
-                       return TYPE;}
+                       return PRIMITIVE;}
 "void"                {yylval.sValue = strdup("void"); 
-                       return TYPE;}
+                       return PRIMITIVE;}
 
 "import"              {return(IMPORT);}
 "static"              {return(STATIC);}

@@ -28,3 +28,9 @@ create_bin_directory:
 	@if [ ! -d "$(BIN_DIRECTORY)" ]; then \
         mkdir -p "$(BIN_DIRECTORY)"; \
     fi
+
+sint:
+	lex adpp_lexer.l
+	yacc adpp_parser.y -d -v -g  
+	gcc lex.yy.c y.tab.c -o parser.exe 
+	./parser.exe < examples/quicksort.adpp

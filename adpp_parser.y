@@ -16,14 +16,15 @@ extern char * yytext;
 	};
 
 %token <sValue> ID
-%token <sValue> TYPE
+%token <sValue> PRIMITIVE
+%token <sValue> ARRAY
 %token <iValue> INTEGER
 %token <cValue> CARACTERE
 %token <fValue> DOUBLE
 %token <sValue> STRING
 %token PROGRAM SUBPROGRAM
 
-%token COMPARISON DIFFERENT LESS_THAN MORE_THAN PLUS MINUS POWER TIMES SPLIT MOD
+%token COMPARISON DIFFERENT LESS_THAN MORE_THAN LESS_THAN_EQUALS MORE_THAN_EQUALS PLUS MINUS POWER TIMES SPLIT MOD INCREMENT DECREMENT
 %token FACTORIAL TERNARY HASH 
 %token AND OR PIPE AMPERSAND
 %token MAP VOID IMPORT STATIC COMMENT
@@ -39,13 +40,17 @@ stmts : stmt
       | stmt stmts;
 
 
-func_def : SUBPROGRAM ID '(' params ')' ':' TYPE block;
+type : PRIMITIVE
+     | ARRAY LESS_THAN PRIMITIVE MORE_THAN
+     ;
+
+func_def : SUBPROGRAM ID '(' params ')' ':' type block;
 
 params : param 
        | param ',' params
        ;
 
-param : TYPE ID;
+param : type ID;
 
 block : '{' stmts '}'
 
@@ -53,6 +58,10 @@ expression : ID
            | literal
            | func_call
            | binary_expr
+           | access
+           ;
+
+access : ID '[' expression ']';
 
 /* inserir literal de outros tipos */
 literal : INTEGER
@@ -69,10 +78,8 @@ expressions : expression
 
 binary_expr : expression binary_operator expression;
 
-binary_operator : COMPARISON 
-                |DIFFERENT 
-                |LESS_THAN 
-                |MORE_THAN 
+
+binary_operator : boolean_operator
                 |PLUS 
                 |MINUS 
                 |POWER 
@@ -81,7 +88,17 @@ binary_operator : COMPARISON
                 |MOD
                 ;
 
-stmt : func_def
+boolean_operator : COMPARISON 
+                 | DIFFERENT 
+                 | LESS_THAN 
+                 | MORE_THAN 
+                 | LESS_THAN_EQUALS 
+                 | MORE_THAN_EQUALS      
+                 | AND
+                 | OR
+
+stmt : ';'
+     | func_def
      | expression ';'
      | if_stmt
      | for_stmt
@@ -90,21 +107,28 @@ stmt : func_def
      | declaration ';'
      ;
 
-declaration : TYPE atrib
-            | TYPE ID;
+declaration : type atrib
+            | type ID;
 
-atrib : ID  '=' expression;
+atrib : ID  '=' expression
+      | ID INCREMENT
+      | ID DECREMENT
+      ;
 
 if_stmt : IF '(' expression ')' block
         | IF '(' expression ')' block ELSE block
         ;
 
-for_stmt : FOR '(' expression ';' expression ';' expression ')';
+for_stmt : FOR '(' for_part ';' expression ';' for_part ')' block;
+
+for_part : atrib
+          | declaration;
 
 return_stmt : RETURN expression;
 %%
 
 int main (void) {
+    yylineno = 0;
 	return yyparse ( );
 }
 

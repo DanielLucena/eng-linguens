@@ -1,10 +1,11 @@
 
-// QuickSort Program
+//QuickSort Program
 program QuickSort {
 
     // Swap Function
     func swap ( int a , int b ) : void {
         int temp = a ;
+        int x = a, b + c, d;
         a = b;
         b = temp;
 	}
@@ -14,12 +15,15 @@ program QuickSort {
 	
         int pivot = arr[high];
         int i = low - 1;
-
+        //1
         for (int j = low; j < high; j++) {
+            //2
             if (arr[j] <= pivot) {
+                //3
                 i++;
                 swap(arr, i, j);
             }
+            //4
         }
     
         swap(arr, i + 1, high);
