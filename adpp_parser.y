@@ -25,7 +25,7 @@ extern char * yytext;
 %token PROGRAM SUBPROGRAM
 
 %token COMPARISON DIFFERENT LESS_THAN MORE_THAN LESS_THAN_EQUALS MORE_THAN_EQUALS PLUS MINUS POWER TIMES SPLIT MOD INCREMENT DECREMENT
-%token FACTORIAL HASH 
+%token FACTORIAL HASH TRUE FALSE
 %token AND OR PIPE AMPERSAND
 %token MAP VOID IMPORT STATIC
 
@@ -76,14 +76,39 @@ param           : type ID ;
 block           : '{' stmts '}' ;
 
 expression      : ID
+                | recursive_expr
                 | literal
                 | func_call
+                | ID INCREMENT;
+                | ID DECREMENT;
+                | INCREMENT ID;
+                | DECREMENT ID;
                 | binary_expr
                 | unary_expr
                 | access
                 | primitive_func
                 | ternary_expr
-                | pointer_expr ;
+                | pointer_expr;
+
+recursive_expr  : term
+           | recursive_expr PLUS term
+           | recursive_expr MINUS term ;
+           | recursive_expr MORE_THAN term ;
+           | recursive_expr LESS_THAN term ;
+           | recursive_expr MORE_THAN_EQUALS term ;
+           | recursive_expr LESS_THAN_EQUALS term ;
+           | recursive_expr COMPARISON term ;
+           | recursive_expr DIFFERENT term ;
+
+term : factor
+     | term TIMES factor
+     | term SPLIT factor
+     | term MOD factor ;
+
+factor : literal
+       | ID
+       | '(' recursive_expr ')' ;
+
 
 access          : ID '[' expression ']' ;
 
@@ -91,6 +116,8 @@ literal         : INTEGER
                 | DOUBLE
                 | CARACTERE
                 | STRING
+                | TRUE
+                | FALSE
                 | array_literal ;
 
 array_literal   : '{' literais '}' ;
@@ -141,7 +168,8 @@ declaration     : type atrib
 atrib           : ID '=' expression
                 | ID INCREMENT
                 | ID DECREMENT
-                | TIMES ID '=' expression ;
+                | TIMES ID '=' expression
+                | access '=' expression;
 
 if_stmt         : IF '(' expression ')' block
                 | IF '(' expression ')' block ELSE block ;
@@ -176,7 +204,7 @@ throw_stmt      : THROW expression ;
 
 import_stmt     : IMPORT STRING ';' ;
 
-static_declaration : STATIC declaration ;
+static_declaration : STATIC func_def ;
 
 %%
 

@@ -1,6 +1,6 @@
 BIN_DIRECTORY := bin
 
-all: run_main
+all: run
 	
 build: create_bin_directory
 	@echo "BUILDING LEXICAL ANALYZER"
@@ -15,13 +15,10 @@ build: create_bin_directory
 
 	gcc -o ADPP bin/adpp.yy.c bin/y.tab.c
 
-run_all: clean build run_main
-	@echo "RUNNING snippet.adpp\n"
-	./ADPP < examples/snippet.adpp
-
-run_main: clean build
+run: clean build
 	@echo "RUNNING quicksort.adpp\n"
 	./ADPP < examples/quicksort.adpp
+	./ADPP < examples/exemplo_completo.adpp
 
 clean:
 	clear

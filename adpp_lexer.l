@@ -89,6 +89,9 @@
 "void"                {yylval.sValue = strdup("void"); 
                        return PRIMITIVE;}
 
+"true"                {return(TRUE);}
+"false"               {return(FALSE);}
+
 "import"              {return(IMPORT);}
 "static"              {return(STATIC);}
 "return"              {return(RETURN);}
