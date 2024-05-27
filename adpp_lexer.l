@@ -3,8 +3,6 @@
   #include "y.tab.h"
   
   extern int yyerror (char *msg); 
-  
-  // void removeSlashN(char*);
 %}
 
 %%
@@ -21,6 +19,7 @@
 
 "switch"              {return(SWITCH);}
 "case"                {return(CASE);}
+"default"             {return(DEFAULT);}
 "break"               {return(BREAK);}
 "continue"            {return(CONTINUE);}
 
@@ -35,7 +34,7 @@
 "throw"               {return(THROW);}
 
 
-";"                   return(yytext[0]); // retorna o caractere consumido, isso pode ser feito para tokens que sejam de apenas um char
+";"                   return(yytext[0]);
 ":"                   return(yytext[0]);
 "=="                  {return(COMPARISON);}
 "!="                  {return(DIFFERENT);}
@@ -47,7 +46,7 @@
 "<="                  {return(LESS_THAN_EQUALS);}
 ">="                  {return(MORE_THAN_EQUALS);}
 "!"                   {return(FACTORIAL);}
-"?"                   {return(TERNARY);}
+"?"                   return(yytext[0]);
 "#"                   {return(HASH);}
 "&&"                  {return(AND);}
 "||"                  {return(OR);}
@@ -115,19 +114,6 @@
 
 %%
 
-
 #ifndef yywrap
    int yywrap (void) {return 1;}
-#endif
-
-#ifndef removeSlashN
-  void removeSlashN(char *str) {
-      int i, j;
-      for (i = 0, j = 0; str[i] != '\0'; i++) {
-          if (str[i] != '\n') {
-              str[j++] = str[i];
-          }
-      }
-      str[j] = '\0';
-  }
 #endif

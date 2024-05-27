@@ -1,3 +1,0 @@
-lex adpp_lexer.l
-yacc adpp_parser.y -d -v -g  (-d: y.tab.h; -v: y.output; -g: y.dot [GraphViz])
-gcc lex.yy.c y.tab.c -o parser.exe 

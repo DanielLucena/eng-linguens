@@ -25,81 +25,90 @@ extern char * yytext;
 %token PROGRAM SUBPROGRAM
 
 %token COMPARISON DIFFERENT LESS_THAN MORE_THAN LESS_THAN_EQUALS MORE_THAN_EQUALS PLUS MINUS POWER TIMES SPLIT MOD INCREMENT DECREMENT
-%token FACTORIAL TERNARY HASH 
+%token FACTORIAL HASH 
 %token AND OR PIPE AMPERSAND
-%token MAP VOID IMPORT STATIC COMMENT
+%token MAP VOID IMPORT STATIC
 
-%token IF ELSE FOR RETURN SWITCH CASE BREAK CONTINUE DO WHILE TRY CATCH FINALLY THROW 
+%token IF ELSE FOR RETURN SWITCH CASE DEFAULT BREAK CONTINUE DO WHILE TRY CATCH FINALLY THROW 
 
 %start program
 %%
 
-program         : PROGRAM ID '{' stmts '}'
-                ;
+program         : PROGRAM ID '{' stmts '}' ;
 
-stmts           : stmt
-                | stmt stmts
-                ;
+stmts           : /* vazio */
+                | stmt stmts ;
 
+stmt            : ';'
+                | func_def
+                | expression ';'
+                | if_stmt
+                | for_stmt
+                | while_stmt
+                | do_while_stmt
+                | try_catch_stmt
+                | switch_stmt
+                | return_stmt ';'
+                | break_stmt ';'
+                | continue_stmt ';'
+                | throw_stmt ';'
+                | atrib ';'
+                | declaration ';'
+                | import_stmt
+                | static_declaration ;
 
 type            : PRIMITIVE
                 | ARRAY LESS_THAN PRIMITIVE MORE_THAN
-                ;
+                | MAP LESS_THAN PRIMITIVE ',' PRIMITIVE MORE_THAN
+                | VOID
+                | type TIMES ;
 
-func_def        : SUBPROGRAM ID '(' params ')' ':' type block
-                ;
+func_def        : SUBPROGRAM ID '(' params ')' ':' type block ;
 
-params          : param 
-                | param ',' params
-                |
-                ;
+params          : /* vazio */
+                | param_list ;
 
-param           : type ID
-                ;
+param_list      : param 
+                | param ',' param_list ;
 
-block           : '{' stmts '}'
-                ;
+param           : type ID ;
+
+block           : '{' stmts '}' ;
 
 expression      : ID
                 | literal
                 | func_call
                 | binary_expr
+                | unary_expr
                 | access
                 | primitive_func
-                ;
+                | ternary_expr
+                | pointer_expr ;
 
-access          : ID '[' expression ']'
-                ;
+access          : ID '[' expression ']' ;
 
-/* inserir literal de outros tipos */
 literal         : INTEGER
                 | DOUBLE
                 | CARACTERE
                 | STRING
-                | array_literal
-                ;
+                | array_literal ;
+
+array_literal   : '{' literais '}' ;
 
 literais        : literal
-                | literal ',' literais
-                ;
+                | literal ',' literais ;
 
-array_literal   : '{' literais '}'
-                ;
+func_call       : ID '(' args ')' ;
 
-func_call       : ID '(' args ')'
-                ;
-
-primitive_func  : ID '.' ID
-
-args            : expressions
-                ;
+args            : /* vazio */
+                | expressions ;
 
 expressions     : expression
-                | expression ',' expressions
-                ;
+                | expression ',' expressions ;
 
-binary_expr     : expression binary_operator expression
-                ;
+primitive_func  : ID '.' ID ;
+
+binary_expr     : expression binary_operator expression ;
 
 binary_operator : PLUS 
                 | MINUS 
@@ -115,40 +124,60 @@ binary_operator : PLUS
                 | MORE_THAN_EQUALS      
                 | AND
                 | OR
-                ;
+                | PIPE
+                | AMPERSAND ;
 
-stmt            : ';'
-                | func_def
-                | expression ';'
-                | if_stmt
-                | for_stmt
-                | return_stmt ';'
-                | atrib ';'
-                | declaration ';'
-                ;
+unary_expr      : expression FACTORIAL
+                | HASH expression ;
+
+ternary_expr    : expression '?' expression ':' expression ;
+
+pointer_expr    : TIMES expression
+                | AMPERSAND expression ;
 
 declaration     : type atrib
-                | type ID
-                ;
+                | type ID ;
 
-atrib           : ID  '=' expression
+atrib           : ID '=' expression
                 | ID INCREMENT
                 | ID DECREMENT
-                ;
+                | TIMES ID '=' expression ;
 
 if_stmt         : IF '(' expression ')' block
-                | IF '(' expression ')' block ELSE block
-                ;
+                | IF '(' expression ')' block ELSE block ;
 
-for_stmt        : FOR '(' for_part ';' expression ';' for_part ')' block
-                ;
+for_stmt        : FOR '(' for_part ';' expression ';' for_part ')' block ;
 
 for_part        : atrib
-                | declaration
-                ;
+                | declaration ;
 
-return_stmt     : RETURN expression
-                ;
+while_stmt      : WHILE '(' expression ')' block ;
+
+do_while_stmt   : DO block WHILE '(' expression ')' ';' ;
+
+try_catch_stmt  : TRY block CATCH '(' ID ')' block
+                | TRY block CATCH '(' ID ')' block FINALLY block ;
+
+switch_stmt     : SWITCH '(' expression ')' '{' case_stmts '}' ;
+
+case_stmts      : /* vazio */
+                | case_stmt case_stmts ;
+
+case_stmt       : CASE literal ':' stmts
+                | DEFAULT ':' stmts ;
+
+return_stmt     : RETURN expression ;
+
+break_stmt      : BREAK ;
+
+continue_stmt   : CONTINUE ;
+
+throw_stmt      : THROW expression ;
+
+import_stmt     : IMPORT STRING ';' ;
+
+static_declaration : STATIC declaration ;
+
 %%
 
 int main (void) {
