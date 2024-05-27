@@ -94,8 +94,7 @@
 "static"              {return(STATIC);}
 "return"              {return(RETURN);}
 
-\/\/.*\n?             {printf("COMMENT: %s", yytext);
-                      yylineno++;}
+\/\/.*\n?             {yylineno++;}
 
 [0-9]+\.[0-9]+        {yylval.fValue = atof(yytext); 
                        return DOUBLE;}

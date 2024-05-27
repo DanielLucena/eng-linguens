@@ -65,6 +65,7 @@ expression      : ID
                 | func_call
                 | binary_expr
                 | access
+                | primitive_func
                 ;
 
 access          : ID '[' expression ']'
@@ -87,6 +88,8 @@ array_literal   : '{' literais '}'
 
 func_call       : ID '(' args ')'
                 ;
+
+primitive_func  : ID '.' ID
 
 args            : expressions
                 ;

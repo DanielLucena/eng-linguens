@@ -1,0 +1,1427 @@
+   0  $accept : program $end
+
+   1  program : PROGRAM ID '{' stmts '}'
+
+   2  stmts : stmt
+   3        | stmt stmts
+
+   4  type : PRIMITIVE
+   5       | ARRAY LESS_THAN PRIMITIVE MORE_THAN
+
+   6  func_def : SUBPROGRAM ID '(' params ')' ':' type block
+
+   7  params : param
+   8         | param ',' params
+   9         |
+
+  10  param : type ID
+
+  11  block : '{' stmts '}'
+
+  12  expression : ID
+  13             | literal
+  14             | func_call
+  15             | binary_expr
+  16             | access
+  17             | primitive_func
+
+  18  access : ID '[' expression ']'
+
+  19  literal : INTEGER
+  20          | DOUBLE
+  21          | CARACTERE
+  22          | STRING
+  23          | array_literal
+
+  24  literais : literal
+  25           | literal ',' literais
+
+  26  array_literal : '{' literais '}'
+
+  27  func_call : ID '(' args ')'
+
+  28  primitive_func : ID '.' ID
+
+  29  args : expressions
+
+  30  expressions : expression
+  31              | expression ',' expressions
+
+  32  binary_expr : expression binary_operator expression
+
+  33  binary_operator : PLUS
+  34                  | MINUS
+  35                  | POWER
+  36                  | TIMES
+  37                  | SPLIT
+  38                  | MOD
+  39                  | COMPARISON
+  40                  | DIFFERENT
+  41                  | LESS_THAN
+  42                  | MORE_THAN
+  43                  | LESS_THAN_EQUALS
+  44                  | MORE_THAN_EQUALS
+  45                  | AND
+  46                  | OR
+
+  47  stmt : ';'
+  48       | func_def
+  49       | expression ';'
+  50       | if_stmt
+  51       | for_stmt
+  52       | return_stmt ';'
+  53       | atrib ';'
+  54       | declaration ';'
+
+  55  declaration : type atrib
+  56              | type ID
+
+  57  atrib : ID '=' expression
+  58        | ID INCREMENT
+  59        | ID DECREMENT
+
+  60  if_stmt : IF '(' expression ')' block
+  61          | IF '(' expression ')' block ELSE block
+
+  62  for_stmt : FOR '(' for_part ';' expression ';' for_part ')' block
+
+  63  for_part : atrib
+  64           | declaration
+
+  65  return_stmt : RETURN expression
+
+state 0
+	$accept : . program $end  (0)
+
+	PROGRAM  shift 1
+	.  error
+
+	program  goto 2
+
+
+state 1
+	program : PROGRAM . ID '{' stmts '}'  (1)
+
+	ID  shift 3
+	.  error
+
+
+state 2
+	$accept : program . $end  (0)
+
+	$end  accept
+
+
+state 3
+	program : PROGRAM ID . '{' stmts '}'  (1)
+
+	'{'  shift 4
+	.  error
+
+
+state 4
+	program : PROGRAM ID '{' . stmts '}'  (1)
+
+	ID  shift 5
+	PRIMITIVE  shift 6
+	ARRAY  shift 7
+	INTEGER  shift 8
+	CARACTERE  shift 9
+	DOUBLE  shift 10
+	STRING  shift 11
+	SUBPROGRAM  shift 12
+	IF  shift 13
+	FOR  shift 14
+	RETURN  shift 15
+	'{'  shift 16
+	';'  shift 17
+	.  error
+
+	stmts  goto 18
+	stmt  goto 19
+	type  goto 20
+	func_def  goto 21
+	expression  goto 22
+	literal  goto 23
+	func_call  goto 24
+	binary_expr  goto 25
+	access  goto 26
+	primitive_func  goto 27
+	array_literal  goto 28
+	if_stmt  goto 29
+	for_stmt  goto 30
+	return_stmt  goto 31
+	atrib  goto 32
+	declaration  goto 33
+
+
+state 5
+	expression : ID .  (12)
+	access : ID . '[' expression ']'  (18)
+	func_call : ID . '(' args ')'  (27)
+	primitive_func : ID . '.' ID  (28)
+	atrib : ID . '=' expression  (57)
+	atrib : ID . INCREMENT  (58)
+	atrib : ID . DECREMENT  (59)
+
+	INCREMENT  shift 34
+	DECREMENT  shift 35
+	'('  shift 36
+	'['  shift 37
+	'.'  shift 38
+	'='  shift 39
+	COMPARISON  reduce 12
+	DIFFERENT  reduce 12
+	LESS_THAN  reduce 12
+	MORE_THAN  reduce 12
+	LESS_THAN_EQUALS  reduce 12
+	MORE_THAN_EQUALS  reduce 12
+	PLUS  reduce 12
+	MINUS  reduce 12
+	POWER  reduce 12
+	TIMES  reduce 12
+	SPLIT  reduce 12
+	MOD  reduce 12
+	AND  reduce 12
+	OR  reduce 12
+	';'  reduce 12
+
+
+state 6
+	type : PRIMITIVE .  (4)
+
+	.  reduce 4
+
+
+state 7
+	type : ARRAY . LESS_THAN PRIMITIVE MORE_THAN  (5)
+
+	LESS_THAN  shift 40
+	.  error
+
+
+state 8
+	literal : INTEGER .  (19)
+
+	.  reduce 19
+
+
+state 9
+	literal : CARACTERE .  (21)
+
+	.  reduce 21
+
+
+state 10
+	literal : DOUBLE .  (20)
+
+	.  reduce 20
+
+
+state 11
+	literal : STRING .  (22)
+
+	.  reduce 22
+
+
+state 12
+	func_def : SUBPROGRAM . ID '(' params ')' ':' type block  (6)
+
+	ID  shift 41
+	.  error
+
+
+state 13
+	if_stmt : IF . '(' expression ')' block  (60)
+	if_stmt : IF . '(' expression ')' block ELSE block  (61)
+
+	'('  shift 42
+	.  error
+
+
+state 14
+	for_stmt : FOR . '(' for_part ';' expression ';' for_part ')' block  (62)
+
+	'('  shift 43
+	.  error
+
+
+state 15
+	return_stmt : RETURN . expression  (65)
+
+	ID  shift 44
+	INTEGER  shift 8
+	CARACTERE  shift 9
+	DOUBLE  shift 10
+	STRING  shift 11
+	'{'  shift 16
+	.  error
+
+	expression  goto 45
+	literal  goto 23
+	func_call  goto 24
+	binary_expr  goto 25
+	access  goto 26
+	primitive_func  goto 27
+	array_literal  goto 28
+
+
+state 16
+	array_literal : '{' . literais '}'  (26)
+
+	INTEGER  shift 8
+	CARACTERE  shift 9
+	DOUBLE  shift 10
+	STRING  shift 11
+	'{'  shift 16
+	.  error
+
+	literal  goto 46
+	array_literal  goto 28
+	literais  goto 47
+
+
+state 17
+	stmt : ';' .  (47)
+
+	.  reduce 47
+
+
+state 18
+	program : PROGRAM ID '{' stmts . '}'  (1)
+
+	'}'  shift 48
+	.  error
+
+
+state 19
+	stmts : stmt .  (2)
+	stmts : stmt . stmts  (3)
+
+	ID  shift 5
+	PRIMITIVE  shift 6
+	ARRAY  shift 7
+	INTEGER  shift 8
+	CARACTERE  shift 9
+	DOUBLE  shift 10
+	STRING  shift 11
+	SUBPROGRAM  shift 12
+	IF  shift 13
+	FOR  shift 14
+	RETURN  shift 15
+	'{'  shift 16
+	';'  shift 17
+	'}'  reduce 2
+
+	stmts  goto 49
+	stmt  goto 19
+	type  goto 20
+	func_def  goto 21
+	expression  goto 22
+	literal  goto 23
+	func_call  goto 24
+	binary_expr  goto 25
+	access  goto 26
+	primitive_func  goto 27
+	array_literal  goto 28
+	if_stmt  goto 29
+	for_stmt  goto 30
+	return_stmt  goto 31
+	atrib  goto 32
+	declaration  goto 33
+
+
+state 20
+	declaration : type . atrib  (55)
+	declaration : type . ID  (56)
+
+	ID  shift 50
+	.  error
+
+	atrib  goto 51
+
+
+state 21
+	stmt : func_def .  (48)
+
+	.  reduce 48
+
+
+state 22
+	binary_expr : expression . binary_operator expression  (32)
+	stmt : expression . ';'  (49)
+
+	COMPARISON  shift 52
+	DIFFERENT  shift 53
+	LESS_THAN  shift 54
+	MORE_THAN  shift 55
+	LESS_THAN_EQUALS  shift 56
+	MORE_THAN_EQUALS  shift 57
+	PLUS  shift 58
+	MINUS  shift 59
+	POWER  shift 60
+	TIMES  shift 61
+	SPLIT  shift 62
+	MOD  shift 63
+	AND  shift 64
+	OR  shift 65
+	';'  shift 66
+	.  error
+
+	binary_operator  goto 67
+
+
+state 23
+	expression : literal .  (13)
+
+	.  reduce 13
+
+
+state 24
+	expression : func_call .  (14)
+
+	.  reduce 14
+
+
+state 25
+	expression : binary_expr .  (15)
+
+	.  reduce 15
+
+
+state 26
+	expression : access .  (16)
+
+	.  reduce 16
+
+
+state 27
+	expression : primitive_func .  (17)
+
+	.  reduce 17
+
+
+state 28
+	literal : array_literal .  (23)
+
+	.  reduce 23
+
+
+state 29
+	stmt : if_stmt .  (50)
+
+	.  reduce 50
+
+
+state 30
+	stmt : for_stmt .  (51)
+
+	.  reduce 51
+
+
+state 31
+	stmt : return_stmt . ';'  (52)
+
+	';'  shift 68
+	.  error
+
+
+state 32
+	stmt : atrib . ';'  (53)
+
+	';'  shift 69
+	.  error
+
+
+state 33
+	stmt : declaration . ';'  (54)
+
+	';'  shift 70
+	.  error
+
+
+state 34
+	atrib : ID INCREMENT .  (58)
+
+	.  reduce 58
+
+
+state 35
+	atrib : ID DECREMENT .  (59)
+
+	.  reduce 59
+
+
+state 36
+	func_call : ID '(' . args ')'  (27)
+
+	ID  shift 44
+	INTEGER  shift 8
+	CARACTERE  shift 9
+	DOUBLE  shift 10
+	STRING  shift 11
+	'{'  shift 16
+	.  error
+
+	expression  goto 71
+	literal  goto 23
+	func_call  goto 24
+	binary_expr  goto 25
+	access  goto 26
+	primitive_func  goto 27
+	array_literal  goto 28
+	args  goto 72
+	expressions  goto 73
+
+
+state 37
+	access : ID '[' . expression ']'  (18)
+
+	ID  shift 44
+	INTEGER  shift 8
+	CARACTERE  shift 9
+	DOUBLE  shift 10
+	STRING  shift 11
+	'{'  shift 16
+	.  error
+
+	expression  goto 74
+	literal  goto 23
+	func_call  goto 24
+	binary_expr  goto 25
+	access  goto 26
+	primitive_func  goto 27
+	array_literal  goto 28
+
+
+state 38
+	primitive_func : ID '.' . ID  (28)
+
+	ID  shift 75
+	.  error
+
+
+state 39
+	atrib : ID '=' . expression  (57)
+
+	ID  shift 44
+	INTEGER  shift 8
+	CARACTERE  shift 9
+	DOUBLE  shift 10
+	STRING  shift 11
+	'{'  shift 16
+	.  error
+
+	expression  goto 76
+	literal  goto 23
+	func_call  goto 24
+	binary_expr  goto 25
+	access  goto 26
+	primitive_func  goto 27
+	array_literal  goto 28
+
+
+state 40
+	type : ARRAY LESS_THAN . PRIMITIVE MORE_THAN  (5)
+
+	PRIMITIVE  shift 77
+	.  error
+
+
+state 41
+	func_def : SUBPROGRAM ID . '(' params ')' ':' type block  (6)
+
+	'('  shift 78
+	.  error
+
+
+state 42
+	if_stmt : IF '(' . expression ')' block  (60)
+	if_stmt : IF '(' . expression ')' block ELSE block  (61)
+
+	ID  shift 44
+	INTEGER  shift 8
+	CARACTERE  shift 9
+	DOUBLE  shift 10
+	STRING  shift 11
+	'{'  shift 16
+	.  error
+
+	expression  goto 79
+	literal  goto 23
+	func_call  goto 24
+	binary_expr  goto 25
+	access  goto 26
+	primitive_func  goto 27
+	array_literal  goto 28
+
+
+state 43
+	for_stmt : FOR '(' . for_part ';' expression ';' for_part ')' block  (62)
+
+	ID  shift 80
+	PRIMITIVE  shift 6
+	ARRAY  shift 7
+	.  error
+
+	type  goto 20
+	atrib  goto 81
+	declaration  goto 82
+	for_part  goto 83
+
+
+state 44
+	expression : ID .  (12)
+	access : ID . '[' expression ']'  (18)
+	func_call : ID . '(' args ')'  (27)
+	primitive_func : ID . '.' ID  (28)
+
+	'('  shift 36
+	'['  shift 37
+	'.'  shift 38
+	COMPARISON  reduce 12
+	DIFFERENT  reduce 12
+	LESS_THAN  reduce 12
+	MORE_THAN  reduce 12
+	LESS_THAN_EQUALS  reduce 12
+	MORE_THAN_EQUALS  reduce 12
+	PLUS  reduce 12
+	MINUS  reduce 12
+	POWER  reduce 12
+	TIMES  reduce 12
+	SPLIT  reduce 12
+	MOD  reduce 12
+	AND  reduce 12
+	OR  reduce 12
+	')'  reduce 12
+	','  reduce 12
+	']'  reduce 12
+	';'  reduce 12
+
+
+state 45
+	binary_expr : expression . binary_operator expression  (32)
+	return_stmt : RETURN expression .  (65)
+
+	COMPARISON  shift 52
+	DIFFERENT  shift 53
+	LESS_THAN  shift 54
+	MORE_THAN  shift 55
+	LESS_THAN_EQUALS  shift 56
+	MORE_THAN_EQUALS  shift 57
+	PLUS  shift 58
+	MINUS  shift 59
+	POWER  shift 60
+	TIMES  shift 61
+	SPLIT  shift 62
+	MOD  shift 63
+	AND  shift 64
+	OR  shift 65
+	';'  reduce 65
+
+	binary_operator  goto 67
+
+
+state 46
+	literais : literal .  (24)
+	literais : literal . ',' literais  (25)
+
+	','  shift 84
+	'}'  reduce 24
+
+
+state 47
+	array_literal : '{' literais . '}'  (26)
+
+	'}'  shift 85
+	.  error
+
+
+state 48
+	program : PROGRAM ID '{' stmts '}' .  (1)
+
+	.  reduce 1
+
+
+state 49
+	stmts : stmt stmts .  (3)
+
+	.  reduce 3
+
+
+state 50
+	declaration : type ID .  (56)
+	atrib : ID . '=' expression  (57)
+	atrib : ID . INCREMENT  (58)
+	atrib : ID . DECREMENT  (59)
+
+	INCREMENT  shift 34
+	DECREMENT  shift 35
+	'='  shift 39
+	')'  reduce 56
+	';'  reduce 56
+
+
+state 51
+	declaration : type atrib .  (55)
+
+	.  reduce 55
+
+
+state 52
+	binary_operator : COMPARISON .  (39)
+
+	.  reduce 39
+
+
+state 53
+	binary_operator : DIFFERENT .  (40)
+
+	.  reduce 40
+
+
+state 54
+	binary_operator : LESS_THAN .  (41)
+
+	.  reduce 41
+
+
+state 55
+	binary_operator : MORE_THAN .  (42)
+
+	.  reduce 42
+
+
+state 56
+	binary_operator : LESS_THAN_EQUALS .  (43)
+
+	.  reduce 43
+
+
+state 57
+	binary_operator : MORE_THAN_EQUALS .  (44)
+
+	.  reduce 44
+
+
+state 58
+	binary_operator : PLUS .  (33)
+
+	.  reduce 33
+
+
+state 59
+	binary_operator : MINUS .  (34)
+
+	.  reduce 34
+
+
+state 60
+	binary_operator : POWER .  (35)
+
+	.  reduce 35
+
+
+state 61
+	binary_operator : TIMES .  (36)
+
+	.  reduce 36
+
+
+state 62
+	binary_operator : SPLIT .  (37)
+
+	.  reduce 37
+
+
+state 63
+	binary_operator : MOD .  (38)
+
+	.  reduce 38
+
+
+state 64
+	binary_operator : AND .  (45)
+
+	.  reduce 45
+
+
+state 65
+	binary_operator : OR .  (46)
+
+	.  reduce 46
+
+
+state 66
+	stmt : expression ';' .  (49)
+
+	.  reduce 49
+
+
+state 67
+	binary_expr : expression binary_operator . expression  (32)
+
+	ID  shift 44
+	INTEGER  shift 8
+	CARACTERE  shift 9
+	DOUBLE  shift 10
+	STRING  shift 11
+	'{'  shift 16
+	.  error
+
+	expression  goto 86
+	literal  goto 23
+	func_call  goto 24
+	binary_expr  goto 25
+	access  goto 26
+	primitive_func  goto 27
+	array_literal  goto 28
+
+
+state 68
+	stmt : return_stmt ';' .  (52)
+
+	.  reduce 52
+
+
+state 69
+	stmt : atrib ';' .  (53)
+
+	.  reduce 53
+
+
+state 70
+	stmt : declaration ';' .  (54)
+
+	.  reduce 54
+
+
+state 71
+	expressions : expression .  (30)
+	expressions : expression . ',' expressions  (31)
+	binary_expr : expression . binary_operator expression  (32)
+
+	COMPARISON  shift 52
+	DIFFERENT  shift 53
+	LESS_THAN  shift 54
+	MORE_THAN  shift 55
+	LESS_THAN_EQUALS  shift 56
+	MORE_THAN_EQUALS  shift 57
+	PLUS  shift 58
+	MINUS  shift 59
+	POWER  shift 60
+	TIMES  shift 61
+	SPLIT  shift 62
+	MOD  shift 63
+	AND  shift 64
+	OR  shift 65
+	','  shift 87
+	')'  reduce 30
+
+	binary_operator  goto 67
+
+
+state 72
+	func_call : ID '(' args . ')'  (27)
+
+	')'  shift 88
+	.  error
+
+
+state 73
+	args : expressions .  (29)
+
+	.  reduce 29
+
+
+state 74
+	access : ID '[' expression . ']'  (18)
+	binary_expr : expression . binary_operator expression  (32)
+
+	COMPARISON  shift 52
+	DIFFERENT  shift 53
+	LESS_THAN  shift 54
+	MORE_THAN  shift 55
+	LESS_THAN_EQUALS  shift 56
+	MORE_THAN_EQUALS  shift 57
+	PLUS  shift 58
+	MINUS  shift 59
+	POWER  shift 60
+	TIMES  shift 61
+	SPLIT  shift 62
+	MOD  shift 63
+	AND  shift 64
+	OR  shift 65
+	']'  shift 89
+	.  error
+
+	binary_operator  goto 67
+
+
+state 75
+	primitive_func : ID '.' ID .  (28)
+
+	.  reduce 28
+
+
+state 76
+	binary_expr : expression . binary_operator expression  (32)
+	atrib : ID '=' expression .  (57)
+
+	COMPARISON  shift 52
+	DIFFERENT  shift 53
+	LESS_THAN  shift 54
+	MORE_THAN  shift 55
+	LESS_THAN_EQUALS  shift 56
+	MORE_THAN_EQUALS  shift 57
+	PLUS  shift 58
+	MINUS  shift 59
+	POWER  shift 60
+	TIMES  shift 61
+	SPLIT  shift 62
+	MOD  shift 63
+	AND  shift 64
+	OR  shift 65
+	')'  reduce 57
+	';'  reduce 57
+
+	binary_operator  goto 67
+
+
+state 77
+	type : ARRAY LESS_THAN PRIMITIVE . MORE_THAN  (5)
+
+	MORE_THAN  shift 90
+	.  error
+
+
+state 78
+	func_def : SUBPROGRAM ID '(' . params ')' ':' type block  (6)
+	params : .  (9)
+
+	PRIMITIVE  shift 6
+	ARRAY  shift 7
+	')'  reduce 9
+
+	type  goto 91
+	params  goto 92
+	param  goto 93
+
+
+state 79
+	binary_expr : expression . binary_operator expression  (32)
+	if_stmt : IF '(' expression . ')' block  (60)
+	if_stmt : IF '(' expression . ')' block ELSE block  (61)
+
+	COMPARISON  shift 52
+	DIFFERENT  shift 53
+	LESS_THAN  shift 54
+	MORE_THAN  shift 55
+	LESS_THAN_EQUALS  shift 56
+	MORE_THAN_EQUALS  shift 57
+	PLUS  shift 58
+	MINUS  shift 59
+	POWER  shift 60
+	TIMES  shift 61
+	SPLIT  shift 62
+	MOD  shift 63
+	AND  shift 64
+	OR  shift 65
+	')'  shift 94
+	.  error
+
+	binary_operator  goto 67
+
+
+state 80
+	atrib : ID . '=' expression  (57)
+	atrib : ID . INCREMENT  (58)
+	atrib : ID . DECREMENT  (59)
+
+	INCREMENT  shift 34
+	DECREMENT  shift 35
+	'='  shift 39
+	.  error
+
+
+state 81
+	for_part : atrib .  (63)
+
+	.  reduce 63
+
+
+state 82
+	for_part : declaration .  (64)
+
+	.  reduce 64
+
+
+state 83
+	for_stmt : FOR '(' for_part . ';' expression ';' for_part ')' block  (62)
+
+	';'  shift 95
+	.  error
+
+
+state 84
+	literais : literal ',' . literais  (25)
+
+	INTEGER  shift 8
+	CARACTERE  shift 9
+	DOUBLE  shift 10
+	STRING  shift 11
+	'{'  shift 16
+	.  error
+
+	literal  goto 46
+	array_literal  goto 28
+	literais  goto 96
+
+
+state 85
+	array_literal : '{' literais '}' .  (26)
+
+	.  reduce 26
+
+
+86: shift/reduce conflict (shift 52, reduce 32) on COMPARISON
+86: shift/reduce conflict (shift 53, reduce 32) on DIFFERENT
+86: shift/reduce conflict (shift 54, reduce 32) on LESS_THAN
+86: shift/reduce conflict (shift 55, reduce 32) on MORE_THAN
+86: shift/reduce conflict (shift 56, reduce 32) on LESS_THAN_EQUALS
+86: shift/reduce conflict (shift 57, reduce 32) on MORE_THAN_EQUALS
+86: shift/reduce conflict (shift 58, reduce 32) on PLUS
+86: shift/reduce conflict (shift 59, reduce 32) on MINUS
+86: shift/reduce conflict (shift 60, reduce 32) on POWER
+86: shift/reduce conflict (shift 61, reduce 32) on TIMES
+86: shift/reduce conflict (shift 62, reduce 32) on SPLIT
+86: shift/reduce conflict (shift 63, reduce 32) on MOD
+86: shift/reduce conflict (shift 64, reduce 32) on AND
+86: shift/reduce conflict (shift 65, reduce 32) on OR
+state 86
+	binary_expr : expression . binary_operator expression  (32)
+	binary_expr : expression binary_operator expression .  (32)
+
+	COMPARISON  shift 52
+	DIFFERENT  shift 53
+	LESS_THAN  shift 54
+	MORE_THAN  shift 55
+	LESS_THAN_EQUALS  shift 56
+	MORE_THAN_EQUALS  shift 57
+	PLUS  shift 58
+	MINUS  shift 59
+	POWER  shift 60
+	TIMES  shift 61
+	SPLIT  shift 62
+	MOD  shift 63
+	AND  shift 64
+	OR  shift 65
+	')'  reduce 32
+	','  reduce 32
+	']'  reduce 32
+	';'  reduce 32
+
+	binary_operator  goto 67
+
+
+state 87
+	expressions : expression ',' . expressions  (31)
+
+	ID  shift 44
+	INTEGER  shift 8
+	CARACTERE  shift 9
+	DOUBLE  shift 10
+	STRING  shift 11
+	'{'  shift 16
+	.  error
+
+	expression  goto 71
+	literal  goto 23
+	func_call  goto 24
+	binary_expr  goto 25
+	access  goto 26
+	primitive_func  goto 27
+	array_literal  goto 28
+	expressions  goto 97
+
+
+state 88
+	func_call : ID '(' args ')' .  (27)
+
+	.  reduce 27
+
+
+state 89
+	access : ID '[' expression ']' .  (18)
+
+	.  reduce 18
+
+
+state 90
+	type : ARRAY LESS_THAN PRIMITIVE MORE_THAN .  (5)
+
+	.  reduce 5
+
+
+state 91
+	param : type . ID  (10)
+
+	ID  shift 98
+	.  error
+
+
+state 92
+	func_def : SUBPROGRAM ID '(' params . ')' ':' type block  (6)
+
+	')'  shift 99
+	.  error
+
+
+state 93
+	params : param .  (7)
+	params : param . ',' params  (8)
+
+	','  shift 100
+	')'  reduce 7
+
+
+state 94
+	if_stmt : IF '(' expression ')' . block  (60)
+	if_stmt : IF '(' expression ')' . block ELSE block  (61)
+
+	'{'  shift 101
+	.  error
+
+	block  goto 102
+
+
+state 95
+	for_stmt : FOR '(' for_part ';' . expression ';' for_part ')' block  (62)
+
+	ID  shift 44
+	INTEGER  shift 8
+	CARACTERE  shift 9
+	DOUBLE  shift 10
+	STRING  shift 11
+	'{'  shift 16
+	.  error
+
+	expression  goto 103
+	literal  goto 23
+	func_call  goto 24
+	binary_expr  goto 25
+	access  goto 26
+	primitive_func  goto 27
+	array_literal  goto 28
+
+
+state 96
+	literais : literal ',' literais .  (25)
+
+	.  reduce 25
+
+
+state 97
+	expressions : expression ',' expressions .  (31)
+
+	.  reduce 31
+
+
+state 98
+	param : type ID .  (10)
+
+	.  reduce 10
+
+
+state 99
+	func_def : SUBPROGRAM ID '(' params ')' . ':' type block  (6)
+
+	':'  shift 104
+	.  error
+
+
+state 100
+	params : param ',' . params  (8)
+	params : .  (9)
+
+	PRIMITIVE  shift 6
+	ARRAY  shift 7
+	')'  reduce 9
+
+	type  goto 91
+	params  goto 105
+	param  goto 93
+
+
+state 101
+	block : '{' . stmts '}'  (11)
+
+	ID  shift 5
+	PRIMITIVE  shift 6
+	ARRAY  shift 7
+	INTEGER  shift 8
+	CARACTERE  shift 9
+	DOUBLE  shift 10
+	STRING  shift 11
+	SUBPROGRAM  shift 12
+	IF  shift 13
+	FOR  shift 14
+	RETURN  shift 15
+	'{'  shift 16
+	';'  shift 17
+	.  error
+
+	stmts  goto 106
+	stmt  goto 19
+	type  goto 20
+	func_def  goto 21
+	expression  goto 22
+	literal  goto 23
+	func_call  goto 24
+	binary_expr  goto 25
+	access  goto 26
+	primitive_func  goto 27
+	array_literal  goto 28
+	if_stmt  goto 29
+	for_stmt  goto 30
+	return_stmt  goto 31
+	atrib  goto 32
+	declaration  goto 33
+
+
+state 102
+	if_stmt : IF '(' expression ')' block .  (60)
+	if_stmt : IF '(' expression ')' block . ELSE block  (61)
+
+	ELSE  shift 107
+	ID  reduce 60
+	PRIMITIVE  reduce 60
+	ARRAY  reduce 60
+	INTEGER  reduce 60
+	CARACTERE  reduce 60
+	DOUBLE  reduce 60
+	STRING  reduce 60
+	SUBPROGRAM  reduce 60
+	IF  reduce 60
+	FOR  reduce 60
+	RETURN  reduce 60
+	'{'  reduce 60
+	'}'  reduce 60
+	';'  reduce 60
+
+
+state 103
+	binary_expr : expression . binary_operator expression  (32)
+	for_stmt : FOR '(' for_part ';' expression . ';' for_part ')' block  (62)
+
+	COMPARISON  shift 52
+	DIFFERENT  shift 53
+	LESS_THAN  shift 54
+	MORE_THAN  shift 55
+	LESS_THAN_EQUALS  shift 56
+	MORE_THAN_EQUALS  shift 57
+	PLUS  shift 58
+	MINUS  shift 59
+	POWER  shift 60
+	TIMES  shift 61
+	SPLIT  shift 62
+	MOD  shift 63
+	AND  shift 64
+	OR  shift 65
+	';'  shift 108
+	.  error
+
+	binary_operator  goto 67
+
+
+state 104
+	func_def : SUBPROGRAM ID '(' params ')' ':' . type block  (6)
+
+	PRIMITIVE  shift 6
+	ARRAY  shift 7
+	.  error
+
+	type  goto 109
+
+
+state 105
+	params : param ',' params .  (8)
+
+	.  reduce 8
+
+
+state 106
+	block : '{' stmts . '}'  (11)
+
+	'}'  shift 110
+	.  error
+
+
+state 107
+	if_stmt : IF '(' expression ')' block ELSE . block  (61)
+
+	'{'  shift 101
+	.  error
+
+	block  goto 111
+
+
+state 108
+	for_stmt : FOR '(' for_part ';' expression ';' . for_part ')' block  (62)
+
+	ID  shift 80
+	PRIMITIVE  shift 6
+	ARRAY  shift 7
+	.  error
+
+	type  goto 20
+	atrib  goto 81
+	declaration  goto 82
+	for_part  goto 112
+
+
+state 109
+	func_def : SUBPROGRAM ID '(' params ')' ':' type . block  (6)
+
+	'{'  shift 101
+	.  error
+
+	block  goto 113
+
+
+state 110
+	block : '{' stmts '}' .  (11)
+
+	.  reduce 11
+
+
+state 111
+	if_stmt : IF '(' expression ')' block ELSE block .  (61)
+
+	.  reduce 61
+
+
+state 112
+	for_stmt : FOR '(' for_part ';' expression ';' for_part . ')' block  (62)
+
+	')'  shift 114
+	.  error
+
+
+state 113
+	func_def : SUBPROGRAM ID '(' params ')' ':' type block .  (6)
+
+	.  reduce 6
+
+
+state 114
+	for_stmt : FOR '(' for_part ';' expression ';' for_part ')' . block  (62)
+
+	'{'  shift 101
+	.  error
+
+	block  goto 115
+
+
+state 115
+	for_stmt : FOR '(' for_part ';' expression ';' for_part ')' block .  (62)
+
+	.  reduce 62
+
+
+State 86 contains 14 shift/reduce conflicts.
+
+
+62 terminals, 26 nonterminals
+66 grammar rules, 116 states
+
+grammar parser grammar
+symbol# value# symbol
+     0      0  $end
+     1    256  error
+     2    257  ID
+     3    258  PRIMITIVE
+     4    259  ARRAY
+     5    260  INTEGER
+     6    261  CARACTERE
+     7    262  DOUBLE
+     8    263  STRING
+     9    264  PROGRAM
+    10    265  SUBPROGRAM
+    11    266  COMPARISON
+    12    267  DIFFERENT
+    13    268  LESS_THAN
+    14    269  MORE_THAN
+    15    270  LESS_THAN_EQUALS
+    16    271  MORE_THAN_EQUALS
+    17    272  PLUS
+    18    273  MINUS
+    19    274  POWER
+    20    275  TIMES
+    21    276  SPLIT
+    22    277  MOD
+    23    278  INCREMENT
+    24    279  DECREMENT
+    25    280  FACTORIAL
+    26    281  TERNARY
+    27    282  HASH
+    28    283  AND
+    29    284  OR
+    30    285  PIPE
+    31    286  AMPERSAND
+    32    287  MAP
+    33    288  VOID
+    34    289  IMPORT
+    35    290  STATIC
+    36    291  COMMENT
+    37    292  IF
+    38    293  ELSE
+    39    294  FOR
+    40    295  RETURN
+    41    296  SWITCH
+    42    297  CASE
+    43    298  BREAK
+    44    299  CONTINUE
+    45    300  DO
+    46    301  WHILE
+    47    302  TRY
+    48    303  CATCH
+    49    304  FINALLY
+    50    305  THROW
+    51    123  '{'
+    52    125  '}'
+    53     40  '('
+    54     41  ')'
+    55     58  ':'
+    56     44  ','
+    57     91  '['
+    58     93  ']'
+    59     46  '.'
+    60     59  ';'
+    61     61  '='
+    62    306  $accept
+    63    307  program
+    64    308  stmts
+    65    309  stmt
+    66    310  type
+    67    311  func_def
+    68    312  params
+    69    313  block
+    70    314  param
+    71    315  expression
+    72    316  literal
+    73    317  func_call
+    74    318  binary_expr
+    75    319  access
+    76    320  primitive_func
+    77    321  array_literal
+    78    322  literais
+    79    323  args
+    80    324  expressions
+    81    325  binary_operator
+    82    326  if_stmt
+    83    327  for_stmt
+    84    328  return_stmt
+    85    329  atrib
+    86    330  declaration
+    87    331  for_part
