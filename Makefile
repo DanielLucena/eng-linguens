@@ -7,10 +7,9 @@ build: create_bin_directory
 
 	lex -o bin/adpp.yy.c adpp_lexer.l
 
-	yacc adpp_parser.y -d -v -g
+	yacc adpp_parser.y -d
 	mv y.tab.c bin/y.tab.c
 	mv y.tab.h bin/y.tab.h
-	mv y.dot bin/y.dot
 	mv y.output bin/y.output
 
 	gcc -o ADPP bin/adpp.yy.c bin/y.tab.c
