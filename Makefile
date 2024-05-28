@@ -3,7 +3,7 @@ BIN_DIRECTORY := bin
 all: run
 	
 build: create_bin_directory
-	@echo "BUILDING LEXICAL ANALYZER"
+	@echo "BUILDING LEXICAL AND SYNTACTIC ANALYZER"
 
 	lex -o bin/adpp.yy.c adpp_lexer.l
 
