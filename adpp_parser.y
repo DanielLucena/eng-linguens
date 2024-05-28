@@ -17,7 +17,6 @@ extern char * yytext;
 
 %token <sValue> ID
 %token <sValue> PRIMITIVE
-%token <sValue> ARRAY
 %token <iValue> INTEGER
 %token <cValue> CARACTERE
 %token <fValue> DOUBLE
@@ -27,7 +26,7 @@ extern char * yytext;
 %token COMPARISON DIFFERENT LESS_THAN MORE_THAN LESS_THAN_EQUALS MORE_THAN_EQUALS PLUS MINUS POWER TIMES SPLIT MOD INCREMENT DECREMENT
 %token FACTORIAL HASH TRUE FALSE
 %token AND OR PIPE AMPERSAND
-%token MAP VOID IMPORT STATIC
+%token ARRAY DICT RECORD IMPORT STATIC
 
 %token IF ELSE FOR RETURN SWITCH CASE DEFAULT BREAK CONTINUE DO WHILE TRY CATCH FINALLY THROW 
 
@@ -54,13 +53,13 @@ stmt            : ';'
                 | throw_stmt ';'
                 | atrib ';'
                 | declaration ';'
+                | record_stmt ';'
                 | import_stmt
-                | static_declaration ;
+                | static_stmt ;
 
 type            : PRIMITIVE
-                | ARRAY LESS_THAN PRIMITIVE MORE_THAN
-                | MAP LESS_THAN PRIMITIVE ',' PRIMITIVE MORE_THAN
-                | VOID
+                | ARRAY LESS_THAN type MORE_THAN
+                | DICT LESS_THAN type ',' type MORE_THAN
                 | type TIMES ;
 
 func_def        : SUBPROGRAM ID '(' params ')' ':' type block ;
@@ -75,8 +74,7 @@ param           : type ID ;
 
 block           : '{' stmts '}' ;
 
-expression      : ID
-                | recursive_expr
+expression      : recursive_expr
                 | literal
                 | func_call
                 | ID INCREMENT;
@@ -91,14 +89,14 @@ expression      : ID
                 | pointer_expr;
 
 recursive_expr  : term
-           | recursive_expr PLUS term
-           | recursive_expr MINUS term ;
-           | recursive_expr MORE_THAN term ;
-           | recursive_expr LESS_THAN term ;
-           | recursive_expr MORE_THAN_EQUALS term ;
-           | recursive_expr LESS_THAN_EQUALS term ;
-           | recursive_expr COMPARISON term ;
-           | recursive_expr DIFFERENT term ;
+           | term PLUS recursive_expr
+           | term MINUS recursive_expr ;
+           | term MORE_THAN recursive_expr ;
+           | term LESS_THAN recursive_expr ;
+           | term MORE_THAN_EQUALS recursive_expr ;
+           | term LESS_THAN_EQUALS recursive_expr ;
+           | term COMPARISON recursive_expr ;
+           | term DIFFERENT recursive_expr  ;
 
 term : factor
      | term TIMES factor
@@ -118,12 +116,20 @@ literal         : INTEGER
                 | STRING
                 | TRUE
                 | FALSE
-                | array_literal ;
+                | collection_lit;
 
-array_literal   : '{' literais '}' ;
+collection_lit  : '{' '}'
+                | '{' array_members '}'
+                | '{' dict_members  '}'
 
-literais        : literal
-                | literal ',' literais ;
+
+array_members   : expression
+                | expression ',' array_members ;
+
+dict_members    : dict_member
+                | dict_member ',' dict_members
+
+dict_member     : expression ':' expression
 
 func_call       : ID '(' args ')' ;
 
@@ -160,7 +166,8 @@ unary_expr      : expression FACTORIAL
 ternary_expr    : expression '?' expression ':' expression ;
 
 pointer_expr    : TIMES expression
-                | AMPERSAND expression ;
+                | AMPERSAND expression 
+                | AMPERSAND '(' pointer_expr ')';
 
 declaration     : type atrib
                 | type ID ;
@@ -168,7 +175,7 @@ declaration     : type atrib
 atrib           : ID '=' expression
                 | ID INCREMENT
                 | ID DECREMENT
-                | TIMES ID '=' expression
+                //| TIMES ID '=' expression
                 | access '=' expression;
 
 if_stmt         : IF '(' expression ')' block
@@ -204,7 +211,16 @@ throw_stmt      : THROW expression ;
 
 import_stmt     : IMPORT STRING ';' ;
 
-static_declaration : STATIC func_def ;
+static_stmt     : STATIC func_def ;
+
+record_stmt     : RECORD ID  ':' record_block
+
+record_block    : '{' record_defs '}'
+
+record_defs     : record_def
+                | record_def ',' record_defs
+
+record_def      : type ID
 
 %%
 

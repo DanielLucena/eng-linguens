@@ -54,7 +54,7 @@
 "&"                   {return(AMPERSAND);}
 "+"                   {return(PLUS);}
 "-"                   {return(MINUS);}
-"**"                  {return(POWER);}
+"^"                  {return(POWER);}
 "*"                   {return(TIMES);}
 "/"                   {return(SPLIT);}
 "%"                   {return(MOD);}
@@ -78,14 +78,9 @@
                        return PRIMITIVE;}
 "char"                {yylval.sValue = strdup("char"); 
                        return PRIMITIVE;}
-"array"               {yylval.sValue = strdup("array"); 
-                       return ARRAY;}
-"rec"                 {yylval.sValue = strdup("rec"); 
-                       return PRIMITIVE;}
-"struct"              {yylval.sValue = strdup("struct"); 
-                       return PRIMITIVE;}
-"dict"                {yylval.sValue = strdup("dict"); 
-                       return PRIMITIVE;}
+"array"               {return ARRAY;}
+"rec"                 {return RECORD;}
+"dict"                {return DICT;}
 "void"                {yylval.sValue = strdup("void"); 
                        return PRIMITIVE;}
 
