@@ -1,0 +1,221 @@
+// Exemplo de código usando todos os recursos da linguagem
+
+program ExemploCompleto {
+
+    // Main Function
+    func main(): void {
+        // Declaração de variáveis
+        int x = 10;
+        decimal y = 3.14;
+        string texto = "Olá, mundo!";
+        bool verdadeiro = true;
+        char letra = 'A';
+        int* p = &x;
+        array<int> numeros = {1, 2, 3, 4, 5};
+
+        // Declaração de um map
+        dict<string, int> mapeamento = {};
+
+        rec aluno : {
+            int matricula,
+            string name,
+            decimal media
+        };
+
+        aluno novoAluno = {
+        matricula: 202310,
+        name: "João",
+        media: 8.5};
+
+        // Estruturas de controle de fluxo
+        if (verdadeiro) {
+            x = soma(x, 5);
+        } else {
+            x = 0;
+        }
+
+        for (int i = 0; i < 10; i++) {
+            numeros[i] = i * 2;
+        }
+
+        while (x > 0) {
+            x--;
+        }
+
+        do {
+            x++;
+        } while (x < 10);
+
+        try {
+            if (x == 0) {
+                throw "Erro: x não pode ser zero!";
+            }
+        } catch (mensagem) {
+            print(mensagem);
+        } finally {
+            print("Bloco finally executado.");
+        }
+
+        switch (letra) {
+            case 'A':
+                print("A letra é A.");
+                break;
+            case 'B':
+                print("A letra é B.");
+                break;
+            default:
+                print("A letra não é A nem B.");
+        }
+
+        // Chamada de função
+        int resultado = soma(3, 4);
+
+        // Expressões
+        int a = 10;
+        int b = 5;
+        int c = (a * b) + x;
+
+        // Operações com arrays
+        numeros[0] = 100;
+        int primeiroElemento = numeros[0];
+
+        // Operadores unários e ternários
+        int incremento = ++x;
+        int decremento = --x;
+        int resultadoTernario = x > 0 ? incremento : decremento;
+
+        // Operadores lógicos e relacionais
+        bool condicao1 = (a > b) && (b < c);
+        bool condicao2 = (x == y) || (a != b);
+
+        // Chamada de função estática
+        imprimirResultado(resultado);
+
+        // Manipulação de strings
+        string saudacao = "Olá";
+        string nome = "Mundo";
+        string mensagem = saudacao + ", " + nome + "!";
+
+        // Operações com registros
+        aluno.matricula = 12345;
+        aluno.name = "Alice";
+        aluno.media = 9.5;
+
+        // Operações com mapas
+        mapeamento["chave1"] = 100;
+        mapeamento["chave2"] = 200;
+
+        int valorChave1 = mapeamento["chave1"];
+        int valorChave2 = mapeamento["chave2"];
+
+        // Operações com ponteiros
+        int* ptr = &valor;
+        int** pptr = &ptr;
+
+        int valor = 10;
+        outroValor = $$pptr;
+        outroValor = $ptr;
+        outroValor = valor!;
+        outroValor = valor + valor!;
+
+        // Operações com matrizes
+        array<array<int>> matriz = {{1, 2}, {3, 4}, {5, 6}};
+        matriz[0][0] = 10;
+        int valorMatriz = matriz[0][0];
+
+        // Uso de função recursiva
+        int fatorial = calculaFatorial(5);
+
+        // Função lambda
+        //var multiplica = (int a, int b) => a * b;
+        int resultadoMultiplica = multiplica(5, 6);
+
+        // Usando incremento e decremento de forma variada
+        x++;
+        ++x;
+        x--;
+        --x;
+
+        // Testando operações de comparação e lógicas
+        bool teste1 = (x >= 10) && (y <= 20.0);
+        bool teste2 = (a != b) || (c == 15);
+
+        // Testando operador ternário em várias situações
+        int resultadoCondicional = (x > 0) ? a : b;
+
+        print("Código executado com sucesso!");
+    }
+
+    // Definição de função com parâmetros e tipo de retorno
+    func soma(int a, int b): int {
+        return a + b;
+    }
+
+    // Função recursiva para calcular o fatorial
+    func calculaFatorial(int n): int {
+        if (n == 0) {
+            return 1;
+        } else {
+            return n * calculaFatorial(1);
+        }
+    }
+
+    // Declaração de função estática
+    static func imprimirResultado(int resultado): void {
+        print("O resultado é: " + resultado);
+    }
+
+    // Definição de função que utiliza array como parâmetro
+    func somaElementos(array<int> arr): int {
+        int soma = 0;
+        for (int i = 0; i < arr.length; i++) {
+            soma = soma + arr[i];
+        }
+        return soma;
+    }
+
+    // Operações matemáticas diversas
+    1 + 2 - 3;
+    (1 + 2) - 3;
+    1 + (2 - 3);
+    1 * 2 + 3;
+    1 * (2 + 3);
+    (1 * 2) + 3;
+
+    // Ponteiros
+    int *ptr;
+    int **pptr;
+
+    int valor = 10;
+
+    ptr = &valor;
+    pptr = &ptr;
+
+    int outroValor;
+
+    outroValor = $$pptr;
+    outroValor = $ptr;
+
+    //acessos
+    rec nomeCompleto : {
+        string primeiroNome,
+        string sobrenome
+    };
+
+    rec pessoa : {
+        nomeCompleto nome,
+        int idade
+    };
+
+    nomeCompleto fulanoNome = {
+        primeiroNome: "fulano",
+        sobrenome: "de tal"
+    };
+
+    pessoa fulano = {
+        nome: fulanoNome,
+        idade: 20
+    };
+
+    
+}

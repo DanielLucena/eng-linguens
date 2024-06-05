@@ -87,11 +87,9 @@ param           : type ID ;
 
 block           : '{' stmts '}' ;
 
-expression      : func_call
-                | access
-                | primitive_func
-                | DOLLAR expression
+expression      : DOLLAR expression
                 | AMPERSAND expression
+                /* | primitive_func */
                 | INCREMENT ID;
                 | DECREMENT ID;
                 | term
@@ -118,9 +116,18 @@ term            : factor
 factor          : literal
                 | ID
                 | '(' expression ')' ;
+                | func_call
+                | access
+                
 
 
 access          : ID '[' expression ']' ;
+                | ID '.' ID;
+                | access '.' ID;
+                | access '[' expression ']'
+
+/* atribute_access : ID '.' ID;
+                | atribute_access '.' ID; */
 
 literal         : INTEGER
                 | DOUBLE
@@ -133,6 +140,7 @@ literal         : INTEGER
 collection_lit  : '{' '}'
                 | '{' array_members '}'
                 | '{' dict_members  '}'
+                | '{' rec_members'}'
 
 
 array_members   : expression
@@ -143,6 +151,11 @@ dict_members    : dict_member
 
 dict_member     : expression ':' expression
 
+rec_members     : rec_member
+                | rec_member ',' rec_members
+
+rec_member      : ID ':' expression
+
 func_call       : ID '(' args ')' ;
 
 args            : /* vazio */
@@ -151,10 +164,12 @@ args            : /* vazio */
 expressions     : expression
                 | expression ',' expressions ;
 
-primitive_func  : ID '.' ID ;
+/* primitive_func  : ID '.' ID ; */
 
 declaration     : type atrib
                 | type ID ;
+                | ID atrib;
+                | ID ID;
 
 atrib           : ID '=' expression
                 | ID INCREMENT
@@ -198,12 +213,13 @@ static_stmt     : STATIC func_def ;
 
 record_stmt     : RECORD ID  ':' record_block
 
-record_block    : '{' record_defs '}'
+record_block    : '{' record_fields '}'
 
-record_defs     : record_def
-                | record_def ',' record_defs
+record_fields  : record_field
+                | record_field ',' record_fields
 
-record_def      : type ID
+record_field   : type ID
+                | ID ID
 
 %%
 

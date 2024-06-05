@@ -19,6 +19,7 @@ run: clean build
 	@echo "RUNNING quicksort.adpp\n"
 	./ADPP < examples/quicksort.adpp
 	./ADPP < examples/exemplo_completo.adpp
+	./ADPP < examples/mais_testes.adpp
 
 clean:
 	clear
