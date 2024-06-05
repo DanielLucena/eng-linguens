@@ -75,7 +75,7 @@ param           : type ID ;
 block           : '{' stmts '}' ;
 
 expression      : recursive_expr
-                | literal
+                /* | literal */
                 | func_call
                 | ID INCREMENT;
                 | ID DECREMENT;
