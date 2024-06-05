@@ -74,31 +74,25 @@ param           : type ID ;
 
 block           : '{' stmts '}' ;
 
-expression      : recursive_expr
-                /* | literal */
-                | func_call
-                | ID INCREMENT;
-                | ID DECREMENT;
+expression      : func_call
                 | INCREMENT ID;
                 | DECREMENT ID;
-                /* | binary_expr */
                 | unary_expr
                 | access
                 | primitive_func
                 | ternary_expr
-                | pointer_expr;
-
-recursive_expr  : term
-                | term PLUS recursive_expr
-                | recursive_expr MINUS term;
-                | term MORE_THAN recursive_expr ;
-                | term LESS_THAN recursive_expr ;
-                | term MORE_THAN_EQUALS recursive_expr ;
-                | recursive_expr LESS_THAN_EQUALS term ;
-                | term COMPARISON recursive_expr ;
-                | term DIFFERENT recursive_expr  ;
-                | recursive_expr AND term;
-                | recursive_expr OR term;
+                | pointer_expr
+                | term
+                | expression PLUS term
+                | expression MINUS term ;
+                | expression MORE_THAN term ;
+                | expression LESS_THAN term ;
+                | expression MORE_THAN_EQUALS term ;
+                | expression LESS_THAN_EQUALS term ;
+                | expression COMPARISON term ;
+                | expression DIFFERENT term  ;
+                | expression AND term;
+                | expression OR term;
 
 term            : factor
                 | term TIMES factor
@@ -107,7 +101,7 @@ term            : factor
 
 factor          : literal
                 | ID
-                | '(' recursive_expr ')' ;
+                | '(' expression ')' ;
 
 
 access          : ID '[' expression ']' ;
@@ -142,25 +136,6 @@ expressions     : expression
                 | expression ',' expressions ;
 
 primitive_func  : ID '.' ID ;
-
-/* binary_expr     : expression binary_operator expression ; */
-
-/* binary_operator : PLUS 
-                | MINUS 
-                | POWER 
-                | TIMES 
-                | SPLIT 
-                | MOD
-                | COMPARISON 
-                | DIFFERENT 
-                | LESS_THAN 
-                | MORE_THAN 
-                | LESS_THAN_EQUALS 
-                | MORE_THAN_EQUALS      
-                | AND
-                | OR
-                | PIPE
-                | AMPERSAND ; */
 
 unary_expr      : expression FACTORIAL
                 | HASH expression ;
