@@ -1,116 +1,118 @@
 %{
   #include <stdio.h>
-
-  void removeSlashN(char*);
+  #include "y.tab.h"
+  
+  extern int yyerror (char *msg); 
 %}
 
 %%
 
-[ \t\n\r]              ;
+[ \t\r]                 ;
 
-"program"             {printf("PROGRAM\n");}
-"func"                {printf("SUBPROGRAM\n");}
+\n                    {yylineno++;}
 
-"if"                  {printf("IF\n");}
-"else"                {printf("ELSE\n");}
+"program"             {return(PROGRAM);}
+"func"                {return(SUBPROGRAM);}
 
-"switch"              {printf("SWITCH\n");}
-"case"                {printf("CASE\n");}
-"break"               {printf("BREAK\n");}
-"continue"            {printf("CONTINUE\n");}
+"if"                  {return(IF);}
+"else"                {return(ELSE);}
 
-"for"                 {printf("FOR\n");}
+"switch"              {return(SWITCH);}
+"case"                {return(CASE);}
+"default"             {return(DEFAULT);}
+"break"               {return(BREAK);}
+"continue"            {return(CONTINUE);}
 
-"do"                  {printf("DO\n");}
-"while"               {printf("WHILE\n");}
+"for"                 {return(FOR);}
 
-"try"                 {printf("TRY\n");}
-"catch"               {printf("CATCH\n");}
-"finally"             {printf("FINALLY\n");}
-"throw"               {printf("THROW\n");}
+"do"                  {return(DO);}
+"while"               {return(WHILE);}
+
+"try"                 {return(TRY);}
+"catch"               {return(CATCH);}
+"finally"             {return(FINALLY);}
+"throw"               {return(THROW);}
 
 
-";"                   {printf("SEMICOLON\n");}
-":"                   {printf("COLON\n");}
-"=="                  {printf("COMPARISON\n");}
-"!="                  {printf("DIFFERENT\n");}
-"="                   {printf("ASSIGNMENT\n");}
-","                   {printf("COMMA\n");}
-"."                   {printf("DOT\n");}
-"<"                   {printf("LESS_THAN\n");}
-">"                   {printf("MORE_THAN\n");}
-"!"                   {printf("FACTORIAL\n");}
-"?"                   {printf("TERNARY\n");}
-"#"                   {printf("HASH\n");}
-"&&"                  {printf("AND\n");}
-"||"                  {printf("OR\n");}
-"|"                   {printf("PIPE\n");}
-"&"                   {printf("AMPERSAND\n");}
-"+"                   {printf("PLUS\n");}
-"-"                   {printf("MINUS\n");}
-"**"                  {printf("POWER\n");}
-"*"                   {printf("TIMES\n");}
-"/"                   {printf("SPLIT\n");}
-"%"                   {printf("MOD\n");}
+";"                   return(yytext[0]);
+":"                   return(yytext[0]);
+"=="                  {return(COMPARISON);}
+"!="                  {return(DIFFERENT);}
+"="                   return(yytext[0]);
+","                   return(yytext[0]);
+"."                   return(yytext[0]);
+"<"                   {return(LESS_THAN);}
+">"                   {return(MORE_THAN);}
+"<="                  {return(LESS_THAN_EQUALS);}
+">="                  {return(MORE_THAN_EQUALS);}
+"!"                   {return(FACTORIAL);}
+"?"                   return(yytext[0]);
+"#"                   {return(HASH);}
+"&&"                  {return(AND);}
+"||"                  {return(OR);}
+"|"                   {return(PIPE);}
+"&"                   {return(AMPERSAND);}
+"+"                   {return(PLUS);}
+"-"                   {return(MINUS);}
+"^"                   {return(POWER);}
+"*"                   {return(TIMES);}
+"/"                   {return(SPLIT);}
+"%"                   {return(MOD);}
+"++"                  {return(INCREMENT);}
+"--"                  {return(DECREMENT);}
+"$"                   {return(DOLLAR);}
 
-"("                   {printf("LEFT_PARENTHESES\n");}
-")"                   {printf("RIGHT_PARENTHESES\n");}
-"["                   {printf("LEFT_BRACKETS\n");}
-"]"                   {printf("RIGHT_BRACKETS\n");}
-"{"                   {printf("LEFT_BRACE\n");}
-"}"                   {printf("RIGHT_BRACE\n");}
+"("                   return(yytext[0]); 
+")"                   return(yytext[0]);
+"["                   return(yytext[0]);
+"]"                   return(yytext[0]);
+"{"                   return(yytext[0]);
+"}"                   return(yytext[0]);
 
-"int"                 {printf("TYPE(INT)\n");}
-"decimal"             {printf("TYPE(DECIMAL)\n");}
-"string"              {printf("TYPE(STRING)\n");}
-"bool"                {printf("TYPE(BOOLEAN)\n");}
-"char"                {printf("TYPE(CARACTER)\n");}
-"array"               {printf("ARRAY\n");}
-"rec"                 {printf("RECORD\n");}
-"struct"              {printf("STRUCT\n");}
-"dict"                {printf("MAP\n");}
-"void"                {printf("VOID\n");}
+"int"                 {yylval.sValue = strdup("int"); 
+                       return PRIMITIVE;}
+"decimal"             {yylval.sValue = strdup("decimal"); 
+                       return PRIMITIVE;}
+"string"              {yylval.sValue = strdup("string"); 
+                       return PRIMITIVE;}
+"bool"                {yylval.sValue = strdup("bool"); 
+                       return PRIMITIVE;}
+"char"                {yylval.sValue = strdup("char"); 
+                       return PRIMITIVE;}
+"array"               {return ARRAY;}
+"rec"                 {return RECORD;}
+"dict"                {return DICT;}
+"void"                {yylval.sValue = strdup("void"); 
+                       return PRIMITIVE;}
 
-"import"              {printf("IMPORT\n");}
-"static"              {printf("STATIC\n");}
-"return"              {printf("RETURN\n");}
+"true"                {return(TRUE);}
+"false"               {return(FALSE);}
 
-\/\/.*\n?             {printf("COMMENT(%s)", yytext);}
+"import"              {return(IMPORT);}
+"static"              {return(STATIC);}
+"return"              {return(RETURN);}
 
-[0-9]+\.[0-9]+        {printf("DOUBLE(%s)\n",yytext);}
+\/\/.*\n?             {yylineno++;}
 
-[0-9]+                {printf("INTEGER(%s)\n",yytext);}
+[0-9]+\.[0-9]+        {yylval.fValue = atof(yytext); 
+                       return DOUBLE;}
 
-(\"\")|(\".*?[^\\]\") {printf("STRING(%s)\n",yytext);}
+[0-9]+                {yylval.iValue = atoi(yytext); 
+                       return INTEGER;}
 
-'.'                   {printf("CARACTERE(%s)\n", yytext);}
+(\"\")|(\".*?[^\\]\") {yylval.sValue = yytext; 
+                       return STRING;}
 
-[a-zA-Z][a-zA-Z0-9]*  {printf("ID(%s)\n",yytext);}
+\'.{1}\'               {yylval.cValue = yytext[1]; 
+                       return CARACTERE;}
 
-.                     {printf("INVALID_CARACTERE(%s)\n", yytext);}
+[a-zA-Z][a-zA-Z0-9]*  {yylval.sValue = strdup(yytext); 
+                       return ID;}
+
+.                     {yyerror("invalid character");}
 
 %%
-
 
 #ifndef yywrap
    int yywrap (void) {return 1;}
 #endif
-
-#ifndef removeSlashN
-  void removeSlashN(char *str) {
-      int i, j;
-      for (i = 0, j = 0; str[i] != '\0'; i++) {
-          if (str[i] != '\n') {
-              str[j++] = str[i];
-          }
-      }
-      str[j] = '\0';
-  }
-#endif
-
-int main(void)
-{
-  yylex();
-  printf("\n");
-  return 0;
-}

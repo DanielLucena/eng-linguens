@@ -1,20 +1,25 @@
 BIN_DIRECTORY := bin
 
-all: run_main
+all: run
 	
 build: create_bin_directory
-	@echo "BUILDING LEXICAL ANALYZER"
+	@echo "BUILDING LEXICAL AND SYNTACTIC ANALYZER"
 
 	lex -o bin/adpp.yy.c adpp_lexer.l
-	gcc -o ADPP bin/adpp.yy.c 
 
-run_all: clean build run_main
-	@echo "RUNNING snippet.adpp\n"
-	./ADPP < examples/snippet.adpp
+	yacc adpp_parser.y -d -v -g
+	mv y.tab.c bin/y.tab.c
+	mv y.tab.h bin/y.tab.h
+	mv y.gv bin/y.gv
+	mv y.output bin/y.output
 
-run_main: clean build
+	gcc -o ADPP bin/adpp.yy.c bin/y.tab.c
+
+run: clean build
 	@echo "RUNNING quicksort.adpp\n"
 	./ADPP < examples/quicksort.adpp
+	./ADPP < examples/exemplo_completo.adpp
+	./ADPP < examples/mais_testes.adpp
 
 clean:
 	clear
@@ -23,8 +28,20 @@ clean:
 
 	rm -f ADPP
 	rm -f bin/*.yy.c
+	rm -f bin/*.dot
+	rm -f bin/*.tab.c
+	rm -f bin/*.tab.h
+	rm -f bin/*.output
 
 create_bin_directory:
 	@if [ ! -d "$(BIN_DIRECTORY)" ]; then \
         mkdir -p "$(BIN_DIRECTORY)"; \
     fi
+
+sint:
+	lex adpp_lexer.l
+
+	yacc adpp_parser.y -d -v -g  
+
+	gcc lex.yy.c y.tab.c -o parser.exe 
+	./parser.exe < examples/quicksort.adpp

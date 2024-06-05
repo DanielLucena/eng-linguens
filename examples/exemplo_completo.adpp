@@ -1,0 +1,122 @@
+// Exemplo de código usando todos os recursos da linguagem
+
+program ExemploCompleto {
+
+    // Main Function
+	func main(): void {
+        // Declaração de variáveis
+        int x = 10;
+        decimal y = 3.14;
+        string texto = "Olá, mundo!";
+        bool verdadeiro = true;
+        char letra = 'A';
+        int* p = &(&x);
+        array<int> numeros = {1, 2, 3, 4, 5};
+
+        // Declaração de um map
+        dict<string, int> mapeamento = {};
+
+        rec aluno : {
+            int matricula,
+            string name,
+            decimal media
+        };
+
+        // Estruturas de controle de fluxo
+        if (verdadeiro) {
+            x = soma(x, 5);
+        } else {
+            x = 0;
+        }
+
+
+        while (x > 0) {
+            x--;
+        }
+
+        do {
+            x++;
+        } while (x < 10);
+
+        try {
+            if (x == 0) {
+                throw "Erro: x não pode ser zero!";
+            }
+        } catch (mensagem) {
+            print(mensagem);
+        } finally {
+            print("Bloco finally executado.");
+        }
+
+        switch (letra) {
+            case 'A':
+                print("A letra é A.");
+                break;
+            case 'B':
+                print("A letra é B.");
+                break;
+            default:
+                print("A letra não é A nem B.");
+        }
+
+        // Chamada de função
+        int resultado = soma(3, 4);
+
+        // Expressões
+        int a = 10;
+        int b = 5;
+        int c = (a * b) + x;
+
+        // Operações com arrays
+        numeros[0] = 100;
+        int primeiroElemento = numeros[0];
+
+        // Operadores unários e ternários
+        int incremento = ++x;
+        int decremento = --x;
+        int resultadoTernario = x > 0 ? incremento : decremento;
+
+        // Operadores lógicos e relacionais
+        bool condicao1 = (a > b) && (b < c);
+        bool condicao2 = (x == y) || (a != b);
+
+        // Chamada de função estática
+        imprimirResultado(resultado);
+    }
+    
+    // Definição de função com parâmetros e tipo de retorno
+    func soma(int a, int b): int {
+        return a + b;
+    }
+
+    // Declaração de função estática
+    static func imprimirResultado(int resultado): void {
+        print("O resultado é: " + resultado);
+    }
+
+    //matriz
+    array<array<int>> matriz;
+
+    //operações matematicas
+    1 + 2 - 3 ; 
+    ( 1 + 2 ) - 3 ;
+    1 + ( 2 - 3 ) ;
+    1 * 2 + 3;
+
+    //ponteiros
+    int * ptr;
+    int ** pptr;
+
+    int valor = 10;
+
+    ptr = &valor;
+    pptr = &ptr;
+
+    int outroValor;
+
+    outroValor = $$pptr ;
+    outroValor = $ptr;
+    outroValor = valor!;
+    outroValor = valor+valor!;
+
+}
