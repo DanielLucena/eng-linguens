@@ -54,7 +54,7 @@
 "&"                   {return(AMPERSAND);}
 "+"                   {return(PLUS);}
 "-"                   {return(MINUS);}
-"^"                  {return(POWER);}
+"^"                   {return(POWER);}
 "*"                   {return(TIMES);}
 "/"                   {return(SPLIT);}
 "%"                   {return(MOD);}

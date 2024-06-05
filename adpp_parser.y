@@ -81,7 +81,7 @@ expression      : recursive_expr
                 | ID DECREMENT;
                 | INCREMENT ID;
                 | DECREMENT ID;
-                | binary_expr
+                /* | binary_expr */
                 | unary_expr
                 | access
                 | primitive_func
@@ -89,23 +89,25 @@ expression      : recursive_expr
                 | pointer_expr;
 
 recursive_expr  : term
-           | term PLUS recursive_expr
-           | term MINUS recursive_expr ;
-           | term MORE_THAN recursive_expr ;
-           | term LESS_THAN recursive_expr ;
-           | term MORE_THAN_EQUALS recursive_expr ;
-           | term LESS_THAN_EQUALS recursive_expr ;
-           | term COMPARISON recursive_expr ;
-           | term DIFFERENT recursive_expr  ;
+                | term PLUS recursive_expr
+                | recursive_expr MINUS term;
+                | term MORE_THAN recursive_expr ;
+                | term LESS_THAN recursive_expr ;
+                | term MORE_THAN_EQUALS recursive_expr ;
+                | recursive_expr LESS_THAN_EQUALS term ;
+                | term COMPARISON recursive_expr ;
+                | term DIFFERENT recursive_expr  ;
+                | recursive_expr AND term;
+                | recursive_expr OR term;
 
-term : factor
-     | term TIMES factor
-     | term SPLIT factor
-     | term MOD factor ;
+term            : factor
+                | term TIMES factor
+                | term SPLIT factor
+                | term MOD factor ;
 
-factor : literal
-       | ID
-       | '(' recursive_expr ')' ;
+factor          : literal
+                | ID
+                | '(' recursive_expr ')' ;
 
 
 access          : ID '[' expression ']' ;
@@ -141,9 +143,9 @@ expressions     : expression
 
 primitive_func  : ID '.' ID ;
 
-binary_expr     : expression binary_operator expression ;
+/* binary_expr     : expression binary_operator expression ; */
 
-binary_operator : PLUS 
+/* binary_operator : PLUS 
                 | MINUS 
                 | POWER 
                 | TIMES 
@@ -158,7 +160,7 @@ binary_operator : PLUS
                 | AND
                 | OR
                 | PIPE
-                | AMPERSAND ;
+                | AMPERSAND ; */
 
 unary_expr      : expression FACTORIAL
                 | HASH expression ;

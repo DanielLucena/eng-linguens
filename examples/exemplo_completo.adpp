@@ -96,4 +96,9 @@ program ExemploCompleto {
 
     //matriz
     array<array<int>> matriz;
+
+    //operações matematicas
+    1 + 2 - 3 ; 
+    ( 1 + 2 ) - 3 ;
+    1 + ( 2 - 3 ) ;
 }
