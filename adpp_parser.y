@@ -25,12 +25,25 @@ extern char * yytext;
 
 %token COMPARISON DIFFERENT LESS_THAN MORE_THAN LESS_THAN_EQUALS MORE_THAN_EQUALS PLUS MINUS POWER TIMES SPLIT MOD INCREMENT DECREMENT
 %token FACTORIAL HASH TRUE FALSE
-%token AND OR PIPE AMPERSAND
+%token AND OR PIPE AMPERSAND DOLLAR
 %token ARRAY DICT RECORD IMPORT STATIC
 
 %token IF ELSE FOR RETURN SWITCH CASE DEFAULT BREAK CONTINUE DO WHILE TRY CATCH FINALLY THROW 
 
 %start program
+
+%right INCREMENT DECREMENT
+%right DOLLAR AMPERSAND
+%right POWER
+%left TIMES SPLIT MOD
+%left PLUS MINUS
+%left COMPARISON DIFFERENT LESS_THAN MORE_THAN LESS_THAN_EQUALS MORE_THAN_EQUALS
+%left AND 
+%left OR
+%right '?'
+%right ':'
+
+
 %%
 
 program         : PROGRAM ID '{' stmts '}' ;
@@ -75,13 +88,12 @@ param           : type ID ;
 block           : '{' stmts '}' ;
 
 expression      : func_call
-                | INCREMENT ID;
-                | DECREMENT ID;
-                | unary_expr
                 | access
                 | primitive_func
-                | ternary_expr
-                | pointer_expr
+                | DOLLAR expression
+                | AMPERSAND expression
+                | INCREMENT ID;
+                | DECREMENT ID;
                 | term
                 | expression PLUS term
                 | expression MINUS term ;
@@ -93,11 +105,15 @@ expression      : func_call
                 | expression DIFFERENT term  ;
                 | expression AND term;
                 | expression OR term;
+                | expression '?' expression ':' expression ;
+
 
 term            : factor
                 | term TIMES factor
                 | term SPLIT factor
                 | term MOD factor ;
+                | term POWER factor;
+                | term FACTORIAL;
 
 factor          : literal
                 | ID
@@ -137,22 +153,12 @@ expressions     : expression
 
 primitive_func  : ID '.' ID ;
 
-unary_expr      : expression FACTORIAL
-                | HASH expression ;
-
-ternary_expr    : expression '?' expression ':' expression ;
-
-pointer_expr    : TIMES expression
-                | AMPERSAND expression 
-                | AMPERSAND '(' pointer_expr ')';
-
 declaration     : type atrib
                 | type ID ;
 
 atrib           : ID '=' expression
                 | ID INCREMENT
                 | ID DECREMENT
-                //| TIMES ID '=' expression
                 | access '=' expression;
 
 if_stmt         : IF '(' expression ')' block

@@ -60,6 +60,7 @@
 "%"                   {return(MOD);}
 "++"                  {return(INCREMENT);}
 "--"                  {return(DECREMENT);}
+"$"                   {return(DOLLAR);}
 
 "("                   return(yytext[0]); 
 ")"                   return(yytext[0]);

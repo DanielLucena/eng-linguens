@@ -102,4 +102,21 @@ program ExemploCompleto {
     ( 1 + 2 ) - 3 ;
     1 + ( 2 - 3 ) ;
     1 * 2 + 3;
+
+    //ponteiros
+    int * ptr;
+    int ** pptr;
+
+    int valor = 10;
+
+    ptr = &valor;
+    pptr = &ptr;
+
+    int outroValor;
+
+    outroValor = $$pptr ;
+    outroValor = $ptr;
+    outroValor = valor!;
+    outroValor = valor+valor!;
+
 }
