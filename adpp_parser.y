@@ -89,7 +89,6 @@ block           : '{' stmts '}' ;
 
 expression      : DOLLAR expression
                 | AMPERSAND expression
-                /* | primitive_func */
                 | INCREMENT ID;
                 | DECREMENT ID;
                 | term
@@ -120,14 +119,10 @@ factor          : literal
                 | access
                 
 
-
 access          : ID '[' expression ']' ;
                 | ID '.' ID;
                 | access '.' ID;
                 | access '[' expression ']'
-
-/* atribute_access : ID '.' ID;
-                | atribute_access '.' ID; */
 
 literal         : INTEGER
                 | DOUBLE
@@ -139,22 +134,15 @@ literal         : INTEGER
 
 collection_lit  : '{' '}'
                 | '{' array_members '}'
-                | '{' dict_members  '}'
-                | '{' rec_members'}'
-
+                | '{' compound_members '}'
 
 array_members   : expression
-                | expression ',' array_members ;
+                | expression ',' array_members ;  
 
-dict_members    : dict_member
-                | dict_member ',' dict_members
+compound_members: compound_member
+                | compound_member ',' compound_members
 
-dict_member     : expression ':' expression
-
-rec_members     : rec_member
-                | rec_member ',' rec_members
-
-rec_member      : ID ':' expression
+compound_member : expression ':' expression
 
 func_call       : ID '(' args ')' ;
 
@@ -163,8 +151,6 @@ args            : /* vazio */
 
 expressions     : expression
                 | expression ',' expressions ;
-
-/* primitive_func  : ID '.' ID ; */
 
 declaration     : type atrib
                 | type ID ;
