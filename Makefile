@@ -1,25 +1,24 @@
 BIN_DIRECTORY := bin
 
-all: run
+all: compile_test
 	
 build: create_bin_directory
-	@echo "BUILDING LEXICAL AND SYNTACTIC ANALYZER"
+	@echo "BUILDING COMPILER"
 
 	lex -o bin/adpp.yy.c adpp_lexer.l
 
-	yacc adpp_parser.y -d -v -g
+	yacc adpp_parser.y -d -v
+
 	mv y.tab.c bin/y.tab.c
 	mv y.tab.h bin/y.tab.h
-	mv y.gv bin/y.gv
 	mv y.output bin/y.output
 
-	gcc -o ADPP bin/adpp.yy.c bin/y.tab.c
+	gcc -o ADPP bin/adpp.yy.c bin/y.tab.c lib/entry.c
 
-run: clean build
-	@echo "RUNNING quicksort.adpp\n"
-	./ADPP < examples/quicksort.adpp
-	./ADPP < examples/exemplo_completo.adpp
-	./ADPP < examples/mais_testes.adpp
+compile_test: clean build
+	@echo "RUNNING tests\n"
+
+	./ADPP examples/simple.adpp
 
 clean:
 	clear
@@ -32,6 +31,8 @@ clean:
 	rm -f bin/*.tab.c
 	rm -f bin/*.tab.h
 	rm -f bin/*.output
+
+	rm -f examples/*.output.c
 
 create_bin_directory:
 	@if [ ! -d "$(BIN_DIRECTORY)" ]; then \

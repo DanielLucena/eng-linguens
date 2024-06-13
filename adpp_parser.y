@@ -1,10 +1,18 @@
 %{
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
+
+#include "../lib/entry.h"
 
 int yylex(void);
 int yyerror(char *s);
+char *cat(int, ...);
+
 extern int yylineno;
 extern char * yytext;
+extern FILE * yyin, * yyout;
 
 %}
 
@@ -13,7 +21,8 @@ extern char * yytext;
 	char   cValue; 	/* char value */
 	char * sValue;  /* string value */
     double fValue; /* double value */
-	};
+    struct entry * ent;
+};
 
 %token <sValue> ID
 %token <sValue> PRIMITIVE
@@ -30,28 +39,43 @@ extern char * yytext;
 
 %token IF ELSE FOR RETURN SWITCH CASE DEFAULT BREAK CONTINUE DO WHILE TRY CATCH FINALLY THROW 
 
-%start program
-
 %right INCREMENT DECREMENT
 %right DOLLAR AMPERSAND
 %right POWER
+%right '?'
+%right ':'
+
 %left TIMES SPLIT MOD
 %left PLUS MINUS
 %left COMPARISON DIFFERENT LESS_THAN MORE_THAN LESS_THAN_EQUALS MORE_THAN_EQUALS
 %left AND 
 %left OR
-%right '?'
-%right ':'
 
+%type <ent> stmts, stmt
+
+%start program
 
 %%
 
-program         : PROGRAM ID '{' stmts '}' ;
+program         : PROGRAM ID '{' stmts '}' 
+                {
+                    fprintf(yyout, "\\\\PROGRAM %s\n", $2);
+                    fprintf(yyout, "%s", $4->code);
+                    freeEntry($4);
+                }
+;
 
-stmts           : /* vazio */
-                | stmt stmts ;
+stmts           : {$$ = createEntry("","");}
+                | stmt stmts {
+                    char * s = cat(3, $1->code, "\n", $2->code);
+                    freeEntry($1);
+                    freeEntry($2);
+                    $$ = createEntry(s, "");
+                    free(s);
+                }
+;
 
-stmt            : ';'
+stmt            : ';' {$$ = createEntry(";","");}
                 | func_def
                 | expression ';'
                 | if_stmt
@@ -209,12 +233,86 @@ record_field   : type ID
 
 %%
 
-int main (void) {
+int main (int argc, char ** argv) {
+    int status;
     yylineno = 1;
-	return yyparse ( );
+
+    if (argc != 2) {
+       printf("Usage: $./ADPP input.adpp\nClosing application...\n");
+       exit(0);
+    }
+    
+    char *outputFilename = malloc(strlen(argv[1]) + 10); // Extra space for ".output.c"
+
+    if (outputFilename == NULL) {
+        perror("Unable to allocate memory for output filename");
+        exit(1);
+    }
+
+    strcpy(outputFilename, argv[1]);
+    char *dot = strrchr(outputFilename, '.');
+    if (dot != NULL) {
+        strcpy(dot, ".output.c");
+    } else {
+        strcat(outputFilename, ".output.c");
+    }
+
+    yyin = fopen(argv[1], "r");
+    if (yyin == NULL) {
+        perror("Unable to open input file");
+        free(outputFilename);
+        exit(1);
+    }
+
+    yyout = fopen(outputFilename, "w");
+    if (yyout == NULL) {
+        perror("Unable to open output file");
+        fclose(yyin);
+        free(outputFilename);
+        exit(1);
+    }
+
+    status = yyparse();
+
+    fclose(yyin);
+    fclose(yyout);
+    free(outputFilename);
+
+    return status;
 }
 
 int yyerror (char *msg) {
 	fprintf (stderr, "linha %d: %s at '%s'\n", yylineno, msg, yytext);
 	return 0;
+}
+
+char *cat(int num, ...) {
+    va_list args;
+    int total_length = 0;
+    
+    // Calculate the total length of the resulting string
+    va_start(args, num);
+    for (int i = 0; i < num; i++) {
+        char *s = va_arg(args, char *);
+        total_length += strlen(s);
+    }
+    va_end(args);
+
+    // Allocate memory for the concatenated string
+    char *output = (char *)malloc((total_length + 1) * sizeof(char));
+    if (!output) {
+        printf("Allocation problem. Closing application...\n");
+        exit(0);
+    }
+
+    // Concatenate the strings
+    output[0] = '\0'; // Initialize the output string
+    va_start(args, num);
+    for (int i = 0; i < num; i++) {
+        char *s = va_arg(args, char *);
+        strcat(output, s);
+    }
+    va_end(args);
+
+    return output;
 }
