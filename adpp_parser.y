@@ -28,7 +28,7 @@ extern FILE * yyin, * yyout;
 %token <sValue> PRIMITIVE
 %token <iValue> INTEGER
 %token <cValue> CARACTERE
-%token <fValue> DOUBLE
+%token <sValue> DOUBLE
 %token <sValue> STRING
 %token PROGRAM SUBPROGRAM
 
@@ -51,7 +51,7 @@ extern FILE * yyin, * yyout;
 %left AND 
 %left OR
 
-%type <ent> stmts, stmt
+%type <ent> stmts, stmt, func_def, params, type, block, declaration, atrib, expression, term, factor, literal
 
 %start program
 
@@ -59,7 +59,8 @@ extern FILE * yyin, * yyout;
 
 program         : PROGRAM ID '{' stmts '}' 
                 {
-                    fprintf(yyout, "\\\\PROGRAM %s\n", $2);
+                    fprintf(yyout, "//PROGRAM %s\n", $2);
+                    free($2);
                     fprintf(yyout, "%s", $4->code);
                     freeEntry($4);
                 }
@@ -89,19 +90,37 @@ stmt            : ';' {$$ = createEntry(";","");}
                 | continue_stmt ';'
                 | throw_stmt ';'
                 | atrib ';'
-                | declaration ';'
+                | declaration ';' {
+                    char * s = cat(2, $1->code, ";\n");
+                    freeEntry($1);
+                    $$ = createEntry(s, "");
+                    free(s);
+                }
                 | record_stmt ';'
                 | import_stmt
                 | static_stmt ;
 
-type            : PRIMITIVE
+type            : PRIMITIVE {
+                    printf("AQUI-----------------------------------------------------------------------------------%s\n", $1);
+                    $$ = createEntry($1,"");
+                    free($1);
+                }
                 | ARRAY LESS_THAN type MORE_THAN
                 | DICT LESS_THAN type ',' type MORE_THAN
                 | type TIMES ;
 
-func_def        : SUBPROGRAM ID '(' params ')' ':' type block ;
+func_def        : SUBPROGRAM ID '(' params ')' ':' type block {
+                    char * s = cat(7, $7->code, " ", $2, "(", $4->code, ")", $8->code);
+                    free($2);
+                    freeEntry($7);
+                    freeEntry($8);
+                    $$ = createEntry(s, "");
+                    free(s);
+                }
 
-params          : /* vazio */
+;
+
+params          : {$$ = createEntry("","");}
                 | param_list ;
 
 param_list      : param 
@@ -109,13 +128,24 @@ param_list      : param
 
 param           : type ID ;
 
-block           : '{' stmts '}' ;
+block           : '{' stmts '}' {
+                    char * s = cat(3, "{\n", $2->code, "}");
+                    freeEntry($2);
+                    $$ = createEntry(s, "");
+                    free(s);
+                }
+;
 
 expression      : DOLLAR expression
                 | AMPERSAND expression
                 | INCREMENT ID;
                 | DECREMENT ID;
-                | term
+                | term {
+                    char * s = cat(1, $1->code);
+                    freeEntry($1);
+                    $$ = createEntry(s, "");
+                    free(s);
+                }
                 | expression PLUS term
                 | expression MINUS term ;
                 | expression MORE_THAN term ;
@@ -129,14 +159,24 @@ expression      : DOLLAR expression
                 | expression '?' expression ':' expression ;
 
 
-term            : factor
+term            : factor {
+                    char * s = cat(1, $1->code);
+                    freeEntry($1);
+                    $$ = createEntry(s, "");
+                    free(s);
+}
                 | term TIMES factor
                 | term SPLIT factor
                 | term MOD factor ;
                 | term POWER factor;
                 | term FACTORIAL;
 
-factor          : literal
+factor          : literal {
+                    char * s = cat(1, $1->code);
+                    freeEntry($1);
+                    $$ = createEntry(s, "");
+                    free(s);
+}
                 | ID
                 | '(' expression ')' ;
                 | func_call
@@ -149,7 +189,13 @@ access          : ID '[' expression ']' ;
                 | access '[' expression ']'
 
 literal         : INTEGER
-                | DOUBLE
+                | DOUBLE {
+                    //printf("AQUI-----------------------------------------------------------------------------------%.2f\n", $1);
+                    char * s = cat(1, $1);
+                    free($1);
+                    $$ = createEntry(s, "DECIMAL");
+                    free(s);
+                }
                 | CARACTERE
                 | STRING
                 | TRUE
@@ -176,12 +222,24 @@ args            : /* vazio */
 expressions     : expression
                 | expression ',' expressions ;
 
-declaration     : type atrib
+declaration     : type atrib {
+                    char * s = cat(3, $1->code, " ", $2->code);
+                    freeEntry($2);
+                    $$ = createEntry(s, "");
+                    free(s);
+                    
+                }
                 | type ID ;
                 | ID atrib;
                 | ID ID;
 
-atrib           : ID '=' expression
+atrib           : ID '=' expression {
+                    char * s = cat(3, $1, "=", $3->code);
+                    free($1);
+                    freeEntry($3);
+                    $$ = createEntry(s, "");
+                    free(s);
+                }
                 | ID INCREMENT
                 | ID DECREMENT
                 | access '=' expression;

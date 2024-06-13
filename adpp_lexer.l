@@ -94,7 +94,7 @@
 
 \/\/.*\n?             {yylineno++;}
 
-[0-9]+\.[0-9]+        {yylval.fValue = atof(yytext); 
+[0-9]+\.[0-9]+        {yylval.sValue = strdup(yytext); 
                        return DOUBLE;}
 
 [0-9]+                {yylval.iValue = atoi(yytext); 

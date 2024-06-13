@@ -18,7 +18,7 @@ build: create_bin_directory
 compile_test: clean build
 	@echo "RUNNING tests\n"
 
-	./ADPP examples/simple.adpp
+	./ADPP examples/prob1.adpp
 
 clean:
 	clear

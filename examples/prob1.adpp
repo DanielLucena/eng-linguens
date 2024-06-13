@@ -1,0 +1,5 @@
+program prob1 {
+    func main(): void {
+        decimal x = 2.5;
+	}
+}
