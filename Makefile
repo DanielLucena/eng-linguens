@@ -13,7 +13,7 @@ build: create_bin_directory
 	mv y.tab.h bin/y.tab.h
 	mv y.output bin/y.output
 
-	gcc -o ADPP bin/adpp.yy.c bin/y.tab.c lib/entry.c
+	gcc -o ADPP bin/adpp.yy.c bin/y.tab.c lib/entry.c lib/hash_table.c
 
 compile_test: clean build
 	@echo "RUNNING tests\n"

@@ -5,35 +5,36 @@
 #include <stdarg.h>
 
 #include "../lib/entry.h"
+#include "../lib/hash_table.h"
 
 int yylex(void);
 int yyerror(char *s);
 char *cat(int, ...);
+void populateTypeTablePrimitives();
 
 extern int yylineno;
 extern char * yytext;
 extern FILE * yyin, * yyout;
-
+HashTable * type_table;
 %}
 
 %union {
-	int    iValue; 	/* integer value */
-	char   cValue; 	/* char value */
 	char * sValue;  /* string value */
-    double fValue; /* double value */
     struct entry * ent;
 };
 
 %token <sValue> ID
 %token <sValue> PRIMITIVE
-%token <iValue> INTEGER
-%token <cValue> CARACTERE
+%token <sValue> INTEGER
+%token <sValue> CARACTERE
 %token <sValue> DOUBLE
+%token <sValue> BOOLEAN
 %token <sValue> STRING
+
 %token PROGRAM SUBPROGRAM
 
-%token COMPARISON DIFFERENT LESS_THAN MORE_THAN LESS_THAN_EQUALS MORE_THAN_EQUALS PLUS MINUS POWER TIMES SPLIT MOD INCREMENT DECREMENT
-%token FACTORIAL HASH TRUE FALSE
+%token NOT COMPARISON DIFFERENT LESS_THAN MORE_THAN LESS_THAN_EQUALS MORE_THAN_EQUALS PLUS MINUS POWER TIMES SPLIT MOD INCREMENT DECREMENT
+%token HASH
 %token AND OR PIPE AMPERSAND DOLLAR
 %token ARRAY DICT RECORD IMPORT STATIC
 
@@ -51,24 +52,74 @@ extern FILE * yyin, * yyout;
 %left AND 
 %left OR
 
-%type <ent> stmts, stmt, func_def, params, type, block, declaration, atrib, expression, term, factor, literal
+%type <ent> main, 
+            stmts,
+            stmt,
+            func_def,
+            params,
+            type,
+            block,
+            declaration,
+            atrib,
+            expression,
+            literal,
+            access,
+            args,
+            func_call,
+            pre_comp_direct,
+            pre_comp_directs,
+            func_defs,
+            expressions,
+            exp_lv_8,
+            exp_lv_7,
+            exp_lv_6,
+            exp_lv_5,
+            exp_lv_4,
+            exp_lv_3,
+            exp_lv_2,
+            exp_lv_1,
 
-%start program
+%start file
 
 %%
 
-program         : PROGRAM ID '{' stmts '}' 
-                {
-                    fprintf(yyout, "//PROGRAM %s\n", $2);
-                    free($2);
-                    fprintf(yyout, "%s", $4->code);
+
+file            : pre_comp_directs func_defs main func_defs {
+                    fprintf(yyout, "%s\n%s\n%s\n%s", $1->code, $2->code, $4->code, $3->code);
+                    freeEntry($1);
+                    freeEntry($2);
+                    freeEntry($3);
                     freeEntry($4);
+                }
+                ;
+
+pre_comp_directs: {$$ = createEntry("","");}
+                | pre_comp_direct pre_comp_directs {
+                    char * s = cat(3, $1->code, "\n", $2->code);
+                    freeEntry($1);
+                    freeEntry($2);
+                    $$ = createEntry(s, "");
+                    free(s);
+                }
+
+pre_comp_direct : record_stmt
+                | import_stmt
+                | static_stmt
+                ;
+
+main            : PROGRAM ID '{' stmts '}' 
+                {
+                    char * s = cat(4, "int ", "main() {\n", $4->code, "\nreturn 0;\n}\n");
+                    free($2);
+                    freeEntry($4);
+                    $$ = createEntry(s, "");
+                    free(s);
                 }
 ;
 
 stmts           : {$$ = createEntry("","");}
                 | stmt stmts {
-                    char * s = cat(3, $1->code, "\n", $2->code);
+                    char * s = cat(2, $1->code, $2->code);
                     freeEntry($1);
                     freeEntry($2);
                     $$ = createEntry(s, "");
@@ -77,7 +128,6 @@ stmts           : {$$ = createEntry("","");}
 ;
 
 stmt            : ';' {$$ = createEntry(";","");}
-                | func_def
                 | expression ';'
                 | if_stmt
                 | for_stmt
@@ -96,18 +146,25 @@ stmt            : ';' {$$ = createEntry(";","");}
                     $$ = createEntry(s, "");
                     free(s);
                 }
-                | record_stmt ';'
-                | import_stmt
-                | static_stmt ;
+                ;
 
 type            : PRIMITIVE {
-                    printf("AQUI-----------------------------------------------------------------------------------%s\n", $1);
-                    $$ = createEntry($1,"");
-                    free($1);
+                    if (exists_entry(type_table, $1)) {
+                        char * s = get_value(type_table, $1);
+                        $$ = createEntry(s, $1);
+                        free($1);
+                        free(s);
+                    } else {
+                        perror("Unable to find declareted primitive");
+                        exit(1);
+                    }
                 }
                 | ARRAY LESS_THAN type MORE_THAN
                 | DICT LESS_THAN type ',' type MORE_THAN
                 | type TIMES ;
+
+func_defs       : {$$ = createEntry("","");}
+                | func_def func_defs
 
 func_def        : SUBPROGRAM ID '(' params ')' ':' type block {
                     char * s = cat(7, $7->code, " ", $2, "(", $4->code, ")", $8->code);
@@ -136,70 +193,141 @@ block           : '{' stmts '}' {
                 }
 ;
 
-expression      : DOLLAR expression
-                | AMPERSAND expression
-                | INCREMENT ID;
-                | DECREMENT ID;
-                | term {
+expression      : expression '?' expression ':' expression
+                | exp_lv_8
+                ;
+
+exp_lv_8        : exp_lv_8 OR exp_lv_7
+                | exp_lv_7
+                ;
+
+exp_lv_7        : exp_lv_7 AND exp_lv_6
+                | exp_lv_6
+                ;
+
+exp_lv_6        : exp_lv_6 MORE_THAN exp_lv_5
+                | exp_lv_6 LESS_THAN exp_lv_5
+                | exp_lv_6 MORE_THAN_EQUALS exp_lv_5
+                | exp_lv_6 LESS_THAN_EQUALS exp_lv_5
+                | exp_lv_6 COMPARISON exp_lv_5
+                | exp_lv_6 DIFFERENT exp_lv_5
+                | exp_lv_5
+                ;
+
+exp_lv_5        : exp_lv_5 PLUS exp_lv_4
+                | exp_lv_5 MINUS exp_lv_4
+                | exp_lv_4
+                ;
+
+exp_lv_4        : exp_lv_4 TIMES exp_lv_3
+                | exp_lv_4 SPLIT exp_lv_3
+                | exp_lv_4 MOD exp_lv_3
+                | exp_lv_3 {
                     char * s = cat(1, $1->code);
                     freeEntry($1);
                     $$ = createEntry(s, "");
                     free(s);
                 }
-                | expression PLUS term
-                | expression MINUS term ;
-                | expression MORE_THAN term ;
-                | expression LESS_THAN term ;
-                | expression MORE_THAN_EQUALS term ;
-                | expression LESS_THAN_EQUALS term ;
-                | expression COMPARISON term ;
-                | expression DIFFERENT term  ;
-                | expression AND term;
-                | expression OR term;
-                | expression '?' expression ':' expression ;
+                ;
 
+exp_lv_3        : exp_lv_3 POWER exp_lv_2
+                | exp_lv_2
+                ;
 
-term            : factor {
+exp_lv_2        : DOLLAR exp_lv_1
+                | AMPERSAND exp_lv_1
+                | INCREMENT exp_lv_1
+                | DECREMENT exp_lv_1
+                | exp_lv_1
+                ;
+
+exp_lv_1        : literal {
                     char * s = cat(1, $1->code);
                     freeEntry($1);
                     $$ = createEntry(s, "");
                     free(s);
-}
-                | term TIMES factor
-                | term SPLIT factor
-                | term MOD factor ;
-                | term POWER factor;
-                | term FACTORIAL;
-
-factor          : literal {
-                    char * s = cat(1, $1->code);
-                    freeEntry($1);
+                }
+                | ID {
+                    char * s = cat(1, $1);
+                    free($1);
                     $$ = createEntry(s, "");
                     free(s);
-}
-                | ID
-                | '(' expression ')' ;
+                }
+                | '(' expression ')' {
+                    char * s = cat(3, "(", $2->code, ")");
+                    freeEntry($2);
+                    $$ = createEntry(s, "");
+                    free(s);
+                }
                 | func_call
-                | access
-                
+                | access {
+                    char * s = cat(1, $1->code);
+                    freeEntry($1);
+                    $$ = createEntry(s, "");
+                    free(s);
+                }
+                ;
 
-access          : ID '[' expression ']' ;
-                | ID '.' ID;
-                | access '.' ID;
-                | access '[' expression ']'
+access          : ID '[' expression ']' {
+                    char * s = cat(4, $1, "[", $3->code, "]");
+                    free($1);
+                    freeEntry($3);
+                    $$ = createEntry(s, "");
+                    free(s);
+                }
+                | ID '.' ID {
+                    char * s = cat(3, $1, ".", $3);
+                    free($1);
+                    free($3);
+                    $$ = createEntry(s, "");
+                    free(s);
+                }
+                | access '.' ID {
+                    char * s = cat(3, $1->code, ".", $3);
+                    freeEntry($1);
+                    free($3);
+                    $$ = createEntry(s, "");
+                    free(s);
+                }
+                | access '[' expression ']' {
+                    char * s = cat(4, $1->code, "[", $3->code, "]");
+                    freeEntry($1);
+                    freeEntry($3);
+                    $$ = createEntry(s, "");
+                    free(s);
+                }
+                ;
 
-literal         : INTEGER
+literal         : INTEGER {
+                    char * s = cat(1, $1);
+                    free($1);
+                    $$ = createEntry(s, "INTEGER");
+                    free(s);
+                }
                 | DOUBLE {
-                    //printf("AQUI-----------------------------------------------------------------------------------%.2f\n", $1);
                     char * s = cat(1, $1);
                     free($1);
                     $$ = createEntry(s, "DECIMAL");
                     free(s);
                 }
-                | CARACTERE
-                | STRING
-                | TRUE
-                | FALSE
+                | CARACTERE {
+                    char * s = cat(1, $1);
+                    free($1);
+                    $$ = createEntry(s, "CARACTERE");
+                    free(s);
+                }
+                | STRING {
+                    char * s = cat(1, $1);
+                    free($1);
+                    $$ = createEntry(s, "STRING");
+                    free(s);
+                }
+                | BOOLEAN {
+                    char * s = cat(1, $1);
+                    free($1);
+                    $$ = createEntry(s, "BOOLEAN");
+                    free(s);
+                }
                 | collection_lit;
 
 collection_lit  : '{' '}'
@@ -214,10 +342,23 @@ compound_members: compound_member
 
 compound_member : expression ':' expression
 
-func_call       : ID '(' args ')' ;
+func_call       : ID '(' args ')' {
+                    char * s = cat(4, $1, "(", $3->code, ")");
+                    free($1);
+                    freeEntry($3);
+                    $$ = createEntry(s, "");
+                    free(s);
+                }
+                ;
 
-args            : /* vazio */
-                | expressions ;
+args            : {$$ = createEntry("", "");};
+                | expressions {
+                    char * s = cat(1, $1->code);
+                    freeEntry($1);
+                    $$ = createEntry(s, "");
+                    free(s);
+                }
+                ;
 
 expressions     : expression
                 | expression ',' expressions ;
@@ -227,11 +368,12 @@ declaration     : type atrib {
                     freeEntry($2);
                     $$ = createEntry(s, "");
                     free(s);
-                    
                 }
                 | type ID ;
                 | ID atrib;
-                | ID ID;
+                | ID ID {
+                    // TODO consultar a tabela de tipos e verificar se o primeiro id é um tipo
+                };
 
 atrib           : ID '=' expression {
                     char * s = cat(3, $1, "=", $3->code);
@@ -330,6 +472,9 @@ int main (int argc, char ** argv) {
         exit(1);
     }
 
+    type_table = create_table();
+    populateTypeTablePrimitives();
+
     status = yyparse();
 
     fclose(yyin);
@@ -373,4 +518,14 @@ char *cat(int num, ...) {
     va_end(args);
 
     return output;
+}
+
+void populateTypeTablePrimitives() {
+    add_entry(type_table, "int", "long");
+    add_entry(type_table, "decimal", "double");
+    add_entry(type_table, "string", "char*");
+    add_entry(type_table, "bool", "int");
+    add_entry(type_table, "char", "char");
+    add_entry(type_table, "rec", "typedef struct");
+    add_entry(type_table, "void", "void");
 }

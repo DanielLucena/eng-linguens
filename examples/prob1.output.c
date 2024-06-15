@@ -1,5 +1,10 @@
-//PROGRAM prob1
-void main(){
-decimal x=2.5;
 
+
+
+int main() {
+double x=2.5;
+double y=3.7;
+long c=5;
+
+return 0;
 }

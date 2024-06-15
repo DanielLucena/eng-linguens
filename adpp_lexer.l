@@ -45,7 +45,7 @@
 ">"                   {return(MORE_THAN);}
 "<="                  {return(LESS_THAN_EQUALS);}
 ">="                  {return(MORE_THAN_EQUALS);}
-"!"                   {return(FACTORIAL);}
+"!"                   {return(NOT);}
 "?"                   return(yytext[0]);
 "#"                   {return(HASH);}
 "&&"                  {return(AND);}
@@ -85,8 +85,11 @@
 "void"                {yylval.sValue = strdup("void"); 
                        return PRIMITIVE;}
 
-"true"                {return(TRUE);}
-"false"               {return(FALSE);}
+"true"                {yylval.sValue = strdup("1"); 
+                       return BOOLEAN;}
+
+"false"               {yylval.sValue = strdup("0"); 
+                       return BOOLEAN;}
 
 "import"              {return(IMPORT);}
 "static"              {return(STATIC);}
@@ -97,13 +100,13 @@
 [0-9]+\.[0-9]+        {yylval.sValue = strdup(yytext); 
                        return DOUBLE;}
 
-[0-9]+                {yylval.iValue = atoi(yytext); 
+[0-9]+                {yylval.sValue = strdup(yytext); 
                        return INTEGER;}
 
 (\"\")|(\".*?[^\\]\") {yylval.sValue = yytext; 
                        return STRING;}
 
-\'.{1}\'               {yylval.cValue = yytext[1]; 
+\'.{1}\'               {yylval.sValue = strdup(yytext); 
                        return CARACTERE;}
 
 [a-zA-Z][a-zA-Z0-9]*  {yylval.sValue = strdup(yytext); 
