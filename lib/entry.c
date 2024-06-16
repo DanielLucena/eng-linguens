@@ -3,15 +3,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-void freeEntry(entry * e){
+void free_entry(entry * e){
   if (e) {
     if (e->code != NULL) free(e->code);
-	  if (e->opt1 != NULL) free(e->opt1);
+	  if (e->type != NULL) free(e->type);
     free(e);
   }
 }
 
-entry * createEntry(char * c1, char * c2){
+entry * create_entry(char * c1, char * c2){
   entry * r = (entry *) malloc(sizeof(entry));
 
   if (!r) {
@@ -20,7 +20,7 @@ entry * createEntry(char * c1, char * c2){
   }
 
   r->code = strdup(c1);
-  r->opt1 = strdup(c2);
+  r->type = strdup(c2);
 
   return r;
 }

@@ -2,13 +2,13 @@
 #define ENTRY
 
 struct entry {
-	   char * code; /* field for storing the output code */
-	   char * opt1; /* field for another purpose */
+	   char * code;
+	   char * type;
 };
 
 typedef struct entry entry;
  
-void freeEntry(entry *);
-entry * createEntry(char *, char *);
+void free_entry(entry *);
+entry * create_entry(char *, char *);
 
 #endif

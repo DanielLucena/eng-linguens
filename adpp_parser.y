@@ -85,20 +85,23 @@ HashTable * type_table;
 
 
 file            : pre_comp_directs func_defs main func_defs {
+                    fprintf(yyout, "#include <stdio.h>\n");
+                    fprintf(yyout, "#include <math.h>\n");
+                    
                     fprintf(yyout, "%s\n%s\n%s\n%s", $1->code, $2->code, $4->code, $3->code);
-                    freeEntry($1);
-                    freeEntry($2);
-                    freeEntry($3);
-                    freeEntry($4);
+                    free_entry($1);
+                    free_entry($2);
+                    free_entry($3);
+                    free_entry($4);
                 }
                 ;
 
-pre_comp_directs: {$$ = createEntry("","");}
+pre_comp_directs: {$$ = create_entry("","");}
                 | pre_comp_direct pre_comp_directs {
                     char * s = cat(3, $1->code, "\n", $2->code);
-                    freeEntry($1);
-                    freeEntry($2);
-                    $$ = createEntry(s, "");
+                    free_entry($1);
+                    free_entry($2);
+                    $$ = create_entry(s, "");
                     free(s);
                 }
 
@@ -111,24 +114,29 @@ main            : PROGRAM ID '{' stmts '}'
                 {
                     char * s = cat(4, "int ", "main() {\n", $4->code, "\nreturn 0;\n}\n");
                     free($2);
-                    freeEntry($4);
-                    $$ = createEntry(s, "");
+                    free_entry($4);
+                    $$ = create_entry(s, "");
                     free(s);
                 }
 ;
 
-stmts           : {$$ = createEntry("","");}
+stmts           : {$$ = create_entry("","");}
                 | stmt stmts {
                     char * s = cat(2, $1->code, $2->code);
-                    freeEntry($1);
-                    freeEntry($2);
-                    $$ = createEntry(s, "");
+                    free_entry($1);
+                    free_entry($2);
+                    $$ = create_entry(s, "");
                     free(s);
                 }
 ;
 
-stmt            : ';' {$$ = createEntry(";","");}
-                | expression ';'
+stmt            : ';' {$$ = create_entry(";","");}
+                | expression ';' {
+                    char * s = cat(2, $1->code, ";\n");
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
                 | if_stmt
                 | for_stmt
                 | while_stmt
@@ -142,8 +150,8 @@ stmt            : ';' {$$ = createEntry(";","");}
                 | atrib ';'
                 | declaration ';' {
                     char * s = cat(2, $1->code, ";\n");
-                    freeEntry($1);
-                    $$ = createEntry(s, "");
+                    free_entry($1);
+                    $$ = create_entry(s, "");
                     free(s);
                 }
                 ;
@@ -151,33 +159,32 @@ stmt            : ';' {$$ = createEntry(";","");}
 type            : PRIMITIVE {
                     if (exists_entry(type_table, $1)) {
                         char * s = get_value(type_table, $1);
-                        $$ = createEntry(s, $1);
+                        $$ = create_entry(s, $1);
                         free($1);
                         free(s);
                     } else {
-                        perror("Unable to find declareted primitive");
-                        exit(1);
+                        yyerror("Unable to find declareted primitive");
                     }
                 }
                 | ARRAY LESS_THAN type MORE_THAN
                 | DICT LESS_THAN type ',' type MORE_THAN
                 | type TIMES ;
 
-func_defs       : {$$ = createEntry("","");}
+func_defs       : {$$ = create_entry("","");}
                 | func_def func_defs
 
 func_def        : SUBPROGRAM ID '(' params ')' ':' type block {
                     char * s = cat(7, $7->code, " ", $2, "(", $4->code, ")", $8->code);
                     free($2);
-                    freeEntry($7);
-                    freeEntry($8);
-                    $$ = createEntry(s, "");
+                    free_entry($7);
+                    free_entry($8);
+                    $$ = create_entry(s, "");
                     free(s);
                 }
 
 ;
 
-params          : {$$ = createEntry("","");}
+params          : {$$ = create_entry("","");}
                 | param_list ;
 
 param_list      : param 
@@ -187,83 +194,229 @@ param           : type ID ;
 
 block           : '{' stmts '}' {
                     char * s = cat(3, "{\n", $2->code, "}");
-                    freeEntry($2);
-                    $$ = createEntry(s, "");
+                    free_entry($2);
+                    $$ = create_entry(s, "");
                     free(s);
                 }
 ;
 
-expression      : expression '?' expression ':' expression
-                | exp_lv_8
-                ;
-
-exp_lv_8        : exp_lv_8 OR exp_lv_7
-                | exp_lv_7
-                ;
-
-exp_lv_7        : exp_lv_7 AND exp_lv_6
-                | exp_lv_6
-                ;
-
-exp_lv_6        : exp_lv_6 MORE_THAN exp_lv_5
-                | exp_lv_6 LESS_THAN exp_lv_5
-                | exp_lv_6 MORE_THAN_EQUALS exp_lv_5
-                | exp_lv_6 LESS_THAN_EQUALS exp_lv_5
-                | exp_lv_6 COMPARISON exp_lv_5
-                | exp_lv_6 DIFFERENT exp_lv_5
-                | exp_lv_5
-                ;
-
-exp_lv_5        : exp_lv_5 PLUS exp_lv_4
-                | exp_lv_5 MINUS exp_lv_4
-                | exp_lv_4
-                ;
-
-exp_lv_4        : exp_lv_4 TIMES exp_lv_3
-                | exp_lv_4 SPLIT exp_lv_3
-                | exp_lv_4 MOD exp_lv_3
-                | exp_lv_3 {
+expression      : expression '?' expression ':' expression {
+                    // TODO verificar se tem ternário em C
+                }
+                | exp_lv_8 {
                     char * s = cat(1, $1->code);
-                    freeEntry($1);
-                    $$ = createEntry(s, "");
+                    free_entry($1);
+                    $$ = create_entry(s, "");
                     free(s);
                 }
                 ;
 
-exp_lv_3        : exp_lv_3 POWER exp_lv_2
-                | exp_lv_2
+exp_lv_8        : exp_lv_8 OR exp_lv_7 {
+                    char * s = cat(3, $1->code, " || ", $3->code);
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "BOOLEAN");
+                    free(s);
+                }
+                | exp_lv_7 {
+                    char * s = cat(1, $1->code);
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
                 ;
 
-exp_lv_2        : DOLLAR exp_lv_1
-                | AMPERSAND exp_lv_1
-                | INCREMENT exp_lv_1
-                | DECREMENT exp_lv_1
-                | exp_lv_1
+exp_lv_7        : exp_lv_7 AND exp_lv_6 {
+                    char * s = cat(3, $1->code, " && ", $3->code);
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "BOOLEAN");
+                    free(s);
+                }
+                | exp_lv_6 {
+                    char * s = cat(1, $1->code);
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
+
+exp_lv_6        : exp_lv_6 MORE_THAN exp_lv_5 {
+                    char * s = cat(3, $1->code, " > ", $3->code);
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "BOOLEAN");
+                    free(s);
+                }
+                | exp_lv_6 LESS_THAN exp_lv_5 {
+                    char * s = cat(3, $1->code, " < ", $3->code);
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "BOOLEAN");
+                    free(s);
+                }
+                | exp_lv_6 MORE_THAN_EQUALS exp_lv_5 {
+                    char * s = cat(3, $1->code, " >= ", $3->code);
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "BOOLEAN");
+                    free(s);
+                }
+                | exp_lv_6 LESS_THAN_EQUALS exp_lv_5 {
+                    char * s = cat(3, $1->code, " <= ", $3->code);
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "BOOLEAN");
+                    free(s);
+                }
+                | exp_lv_6 COMPARISON exp_lv_5 {
+                    char * s = cat(3, $1->code, " == ", $3->code);
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "BOOLEAN");
+                    free(s);
+                }
+                | exp_lv_6 DIFFERENT exp_lv_5 {
+                    char * s = cat(3, $1->code, " != ", $3->code);
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "BOOLEAN");
+                    free(s);
+                }
+                | exp_lv_5 {
+                    char * s = cat(1, $1->code);
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
+
+exp_lv_5        : exp_lv_5 PLUS exp_lv_4 {
+                    char * s = cat(3, $1->code, " + ", $3->code);
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | exp_lv_5 MINUS exp_lv_4 {
+                    char * s = cat(3, $1->code, " - ", $3->code);
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | exp_lv_4 {
+                    char * s = cat(1, $1->code);
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
+
+exp_lv_4        : exp_lv_4 TIMES exp_lv_3 {
+                    char * s = cat(3, $1->code, " * ", $3->code);
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | exp_lv_4 SPLIT exp_lv_3 {
+                    char * s = cat(3, $1->code, " / ", $3->code);
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | exp_lv_4 MOD exp_lv_3 {
+                    char * s = cat(3, $1->code, " % ", $3->code);
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | exp_lv_3 {
+                    char * s = cat(1, $1->code);
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
+
+exp_lv_3        : exp_lv_3 POWER exp_lv_2 {
+                    char * s = cat(5, "pow(", $1->code, ", ", $3->code, ")");
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | exp_lv_2 {
+                    char * s = cat(1, $1->code);
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
+
+exp_lv_2        : DOLLAR exp_lv_1 {
+                    char * s = cat(3, "(*", $2->code, ")");
+                    free_entry($2);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | AMPERSAND exp_lv_1 {
+                    char * s = cat(3, "(&", $2->code, ")");
+                    free_entry($2);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | INCREMENT exp_lv_1 {
+                    char * s = cat(3, "(++", $2->code, ")");
+                    free_entry($2);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | DECREMENT exp_lv_1 {
+                    char * s = cat(3, "(--", $2->code, ")");
+                    free_entry($2);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | exp_lv_1 {
+                    char * s = cat(1, $1->code);
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
                 ;
 
 exp_lv_1        : literal {
                     char * s = cat(1, $1->code);
-                    freeEntry($1);
-                    $$ = createEntry(s, "");
+                    free_entry($1);
+                    $$ = create_entry(s, "");
                     free(s);
                 }
                 | ID {
                     char * s = cat(1, $1);
                     free($1);
-                    $$ = createEntry(s, "");
+                    $$ = create_entry(s, "");
                     free(s);
                 }
                 | '(' expression ')' {
                     char * s = cat(3, "(", $2->code, ")");
-                    freeEntry($2);
-                    $$ = createEntry(s, "");
+                    free_entry($2);
+                    $$ = create_entry(s, "");
                     free(s);
                 }
-                | func_call
+                | func_call {
+                    char * s = cat(1, $1->code);
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
                 | access {
                     char * s = cat(1, $1->code);
-                    freeEntry($1);
-                    $$ = createEntry(s, "");
+                    free_entry($1);
+                    $$ = create_entry(s, "");
                     free(s);
                 }
                 ;
@@ -271,29 +424,29 @@ exp_lv_1        : literal {
 access          : ID '[' expression ']' {
                     char * s = cat(4, $1, "[", $3->code, "]");
                     free($1);
-                    freeEntry($3);
-                    $$ = createEntry(s, "");
+                    free_entry($3);
+                    $$ = create_entry(s, "");
                     free(s);
                 }
                 | ID '.' ID {
                     char * s = cat(3, $1, ".", $3);
                     free($1);
                     free($3);
-                    $$ = createEntry(s, "");
+                    $$ = create_entry(s, "");
                     free(s);
                 }
                 | access '.' ID {
                     char * s = cat(3, $1->code, ".", $3);
-                    freeEntry($1);
+                    free_entry($1);
                     free($3);
-                    $$ = createEntry(s, "");
+                    $$ = create_entry(s, "");
                     free(s);
                 }
                 | access '[' expression ']' {
                     char * s = cat(4, $1->code, "[", $3->code, "]");
-                    freeEntry($1);
-                    freeEntry($3);
-                    $$ = createEntry(s, "");
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "");
                     free(s);
                 }
                 ;
@@ -301,31 +454,31 @@ access          : ID '[' expression ']' {
 literal         : INTEGER {
                     char * s = cat(1, $1);
                     free($1);
-                    $$ = createEntry(s, "INTEGER");
+                    $$ = create_entry(s, "INTEGER");
                     free(s);
                 }
                 | DOUBLE {
                     char * s = cat(1, $1);
                     free($1);
-                    $$ = createEntry(s, "DECIMAL");
+                    $$ = create_entry(s, "DECIMAL");
                     free(s);
                 }
                 | CARACTERE {
                     char * s = cat(1, $1);
                     free($1);
-                    $$ = createEntry(s, "CARACTERE");
+                    $$ = create_entry(s, "CARACTERE");
                     free(s);
                 }
                 | STRING {
                     char * s = cat(1, $1);
-                    free($1);
-                    $$ = createEntry(s, "STRING");
+                    //free($1); Por algum motivo tá dando errado
+                    $$ = create_entry(s, "STRING");
                     free(s);
                 }
                 | BOOLEAN {
                     char * s = cat(1, $1);
                     free($1);
-                    $$ = createEntry(s, "BOOLEAN");
+                    $$ = create_entry(s, "BOOLEAN");
                     free(s);
                 }
                 | collection_lit;
@@ -345,28 +498,40 @@ compound_member : expression ':' expression
 func_call       : ID '(' args ')' {
                     char * s = cat(4, $1, "(", $3->code, ")");
                     free($1);
-                    freeEntry($3);
-                    $$ = createEntry(s, "");
+                    free_entry($3);
+                    $$ = create_entry(s, "");
                     free(s);
                 }
                 ;
 
-args            : {$$ = createEntry("", "");};
+args            : {$$ = create_entry("", "");};
                 | expressions {
                     char * s = cat(1, $1->code);
-                    freeEntry($1);
-                    $$ = createEntry(s, "");
+                    free_entry($1);
+                    $$ = create_entry(s, "");
                     free(s);
                 }
                 ;
 
-expressions     : expression
-                | expression ',' expressions ;
+expressions     : expression {
+                    char * s = cat(1, $1->code);
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | expression ',' expressions {
+                    char * s = cat(3, $1->code, ", ", $3->code);
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
 
 declaration     : type atrib {
                     char * s = cat(3, $1->code, " ", $2->code);
-                    freeEntry($2);
-                    $$ = createEntry(s, "");
+                    free_entry($2);
+                    $$ = create_entry(s, "");
                     free(s);
                 }
                 | type ID ;
@@ -378,8 +543,8 @@ declaration     : type atrib {
 atrib           : ID '=' expression {
                     char * s = cat(3, $1, "=", $3->code);
                     free($1);
-                    freeEntry($3);
-                    $$ = createEntry(s, "");
+                    free_entry($3);
+                    $$ = create_entry(s, "");
                     free(s);
                 }
                 | ID INCREMENT
@@ -425,10 +590,10 @@ record_stmt     : RECORD ID  ':' record_block
 
 record_block    : '{' record_fields '}'
 
-record_fields  : record_field
+record_fields   : record_field
                 | record_field ',' record_fields
 
-record_field   : type ID
+record_field    : type ID
                 | ID ID
 
 %%
@@ -473,6 +638,7 @@ int main (int argc, char ** argv) {
     }
 
     type_table = create_table();
+
     populateTypeTablePrimitives();
 
     status = yyparse();
@@ -485,7 +651,7 @@ int main (int argc, char ** argv) {
 }
 
 int yyerror (char *msg) {
-	fprintf (stderr, "linha %d: %s at '%s'\n", yylineno, msg, yytext);
+	fprintf (stderr, "line %d: %s at '%s'\n", yylineno, msg, yytext);
 	return 0;
 }
 

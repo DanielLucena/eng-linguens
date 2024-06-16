@@ -3,6 +3,6 @@ program prob1 {
     decimal y = 3.7;
     int c = 5;
 
-    //decimal result = x * x - y + c;
-    //printf("%2.f", result);
+    decimal result = x * x - y + c;
+    printf("%2.f", 2);
 }
