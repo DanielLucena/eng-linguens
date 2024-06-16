@@ -3,24 +3,26 @@
 
 #include <stdbool.h>
 
-#define INITIAL_SIZE 100
+#define INITIAL_CAPACITY 10
 
-typedef struct {
+typedef struct Node {
     char* key;
     char* value;
-} HashNode;
+    struct Node* next;
+} Node;
 
 typedef struct {
-    HashNode** nodes;
+    Node** buckets;
     int size;
-    int count;
+    int capacity;
 } HashTable;
 
 HashTable* create_table();
 void free_table(HashTable* table);
-bool add_entry(HashTable* table, const char* key, const char* value);
-bool remove_entry(HashTable* table, const char* key);
-bool exists_entry(HashTable* table, const char* key);
-char* get_value(HashTable* table, const char* key);
+bool add_to_table(HashTable* table, const char* key, const char* value);
+bool remove_from_table(HashTable* table, const char* key);
+bool exists_on_table(HashTable* table, const char* key);
+char* get_value_from_table(HashTable* table, const char* key);
+void iterate_table(HashTable* table, void (*callback)(const char* key, const char* value));
 
-#endif
+#endif // HASH_TABLE_H

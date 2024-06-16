@@ -103,8 +103,11 @@
 [0-9]+                {yylval.sValue = strdup(yytext); 
                        return INTEGER;}
 
-(\"\")|(\".*?[^\\]\") {yylval.sValue = yytext; 
+(\"\")|(\".*?[^\\]\") {yylval.sValue = strdup(yytext); 
                        return STRING;}
+
+(<.*?[^\\]>)          {yylval.sValue = strdup(yytext); 
+                       return STRINGLIB;}
 
 \'.{1}\'               {yylval.sValue = strdup(yytext); 
                        return CARACTERE;}

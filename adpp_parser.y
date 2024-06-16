@@ -11,6 +11,7 @@ int yylex(void);
 int yyerror(char *s);
 char *cat(int, ...);
 void populateTypeTablePrimitives();
+void print_entry(const char* key, const char* value);
 
 extern int yylineno;
 extern char * yytext;
@@ -30,6 +31,7 @@ HashTable * type_table;
 %token <sValue> DOUBLE
 %token <sValue> BOOLEAN
 %token <sValue> STRING
+%token <sValue> STRINGLIB
 
 %token PROGRAM SUBPROGRAM
 
@@ -55,6 +57,7 @@ HashTable * type_table;
 %type <ent> main, 
             stmts,
             stmt,
+            import_stmt,
             func_def,
             params,
             type,
@@ -86,7 +89,6 @@ HashTable * type_table;
 
 file            : pre_comp_directs func_defs main func_defs {
                     fprintf(yyout, "#include <stdio.h>\n");
-                    fprintf(yyout, "#include <math.h>\n");
                     
                     fprintf(yyout, "%s\n%s\n%s\n%s", $1->code, $2->code, $4->code, $3->code);
                     free_entry($1);
@@ -110,8 +112,10 @@ pre_comp_direct : record_stmt
                 | static_stmt
                 ;
 
-main            : PROGRAM ID '{' stmts '}' 
+main            : {$$ = create_entry("","");}
+                | PROGRAM ID '{' stmts '}' 
                 {
+                    add_to_table(type_table, "int main()", "#FUNCTION");
                     char * s = cat(4, "int ", "main() {\n", $4->code, "\nreturn 0;\n}\n");
                     free($2);
                     free_entry($4);
@@ -157,8 +161,8 @@ stmt            : ';' {$$ = create_entry(";","");}
                 ;
 
 type            : PRIMITIVE {
-                    if (exists_entry(type_table, $1)) {
-                        char * s = get_value(type_table, $1);
+                    if (exists_on_table(type_table, $1)) {
+                        char * s = get_value_from_table(type_table, $1);
                         $$ = create_entry(s, $1);
                         free($1);
                         free(s);
@@ -174,7 +178,27 @@ func_defs       : {$$ = create_entry("","");}
                 | func_def func_defs
 
 func_def        : SUBPROGRAM ID '(' params ')' ':' type block {
-                    char * s = cat(7, $7->code, " ", $2, "(", $4->code, ")", $8->code);
+                    char * funcProt = cat(6, $7->code, " ", $2, "(", $4->code, ")");
+
+                    if (strcmp("long main()", funcProt) == 0) {
+                        free(funcProt);
+                        free($2);
+                        free_entry($7);
+                        free_entry($8);
+                        yyerror("Function main is reservated by the compiller");
+                    }
+                    
+                    if(exists_on_table(type_table, funcProt)) {
+                        free(funcProt);
+                        free($2);
+                        free_entry($7);
+                        free_entry($8);
+                        yyerror("Function has arready bean declareted");
+                    }
+
+                    add_to_table(type_table, funcProt, "#FUNCTION");
+                    char * s = cat(2, funcProt, $8->code);
+                    free(funcProt);
                     free($2);
                     free_entry($7);
                     free_entry($8);
@@ -343,7 +367,11 @@ exp_lv_4        : exp_lv_4 TIMES exp_lv_3 {
                 ;
 
 exp_lv_3        : exp_lv_3 POWER exp_lv_2 {
-                    char * s = cat(5, "pow(", $1->code, ", ", $3->code, ")");
+                    char * s = cat(5, "pow(", $1->code, ", ", $3->code, " + 0.0)");
+                    if(!exists_on_table(type_table, "#include \"math.h\"")){
+                        add_to_table(type_table, "#include \"math.h\"", "#IMPORT");
+                    }
+
                     free_entry($1);
                     free_entry($3);
                     $$ = create_entry(s, "");
@@ -582,7 +610,23 @@ continue_stmt   : CONTINUE ;
 
 throw_stmt      : THROW expression ;
 
-import_stmt     : IMPORT STRING ';' ;
+import_stmt     : IMPORT STRING ';' {
+                    char * importText = cat(2, "#include ", $2);
+                    if(!exists_on_table(type_table, importText)){
+                        add_to_table(type_table, importText, "#IMPORT");
+                    }
+                    
+                    $$ = create_entry(importText, "#IMPORT");
+                }
+                | IMPORT STRINGLIB ';' {
+                    char * importText = cat(2, "#include ", $2);
+                    if(!exists_on_table(type_table, importText)){
+                        add_to_table(type_table, importText, "#IMPORT");
+                    }
+                    
+                    $$ = create_entry(importText, "#IMPORT");
+                }
+                ;
 
 static_stmt     : STATIC func_def ;
 
@@ -610,8 +654,7 @@ int main (int argc, char ** argv) {
     char *outputFilename = malloc(strlen(argv[1]) + 10); // Extra space for ".output.c"
 
     if (outputFilename == NULL) {
-        perror("Unable to allocate memory for output filename");
-        exit(1);
+        yyerror("Unable to allocate memory for output filename");
     }
 
     strcpy(outputFilename, argv[1]);
@@ -624,17 +667,15 @@ int main (int argc, char ** argv) {
 
     yyin = fopen(argv[1], "r");
     if (yyin == NULL) {
-        perror("Unable to open input file");
         free(outputFilename);
-        exit(1);
+        yyerror("Unable to open input file");
     }
 
     yyout = fopen(outputFilename, "w");
     if (yyout == NULL) {
-        perror("Unable to open output file");
         fclose(yyin);
         free(outputFilename);
-        exit(1);
+        yyerror("Unable to open output file");
     }
 
     type_table = create_table();
@@ -643,11 +684,18 @@ int main (int argc, char ** argv) {
 
     status = yyparse();
 
+    iterate_table(type_table, print_entry);
+
     fclose(yyin);
     fclose(yyout);
     free(outputFilename);
+    free_table(type_table);
 
     return status;
+}
+
+void print_entry(const char* key, const char* value) {
+    printf("Key: %s, Value: %s\n", key, value);
 }
 
 int yyerror (char *msg) {
@@ -687,11 +735,11 @@ char *cat(int num, ...) {
 }
 
 void populateTypeTablePrimitives() {
-    add_entry(type_table, "int", "long");
-    add_entry(type_table, "decimal", "double");
-    add_entry(type_table, "string", "char*");
-    add_entry(type_table, "bool", "int");
-    add_entry(type_table, "char", "char");
-    add_entry(type_table, "rec", "typedef struct");
-    add_entry(type_table, "void", "void");
+    add_to_table(type_table, "int", "long");
+    add_to_table(type_table, "decimal", "double");
+    add_to_table(type_table, "string", "char*");
+    add_to_table(type_table, "bool", "int");
+    add_to_table(type_table, "char", "char");
+    add_to_table(type_table, "rec", "typedef struct");
+    add_to_table(type_table, "void", "void");
 }
