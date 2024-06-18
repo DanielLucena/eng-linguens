@@ -92,7 +92,7 @@
                        return BOOLEAN;}
 
 "import"              {return(IMPORT);}
-"static"              {return(STATIC);}
+"global"              {return(GLOBAL);}
 "return"              {return(RETURN);}
 
 \/\/.*\n?             {yylineno++;}
@@ -112,7 +112,7 @@
 \'.{1}\'               {yylval.sValue = strdup(yytext); 
                        return CARACTERE;}
 
-[a-zA-Z][a-zA-Z0-9]*  {yylval.sValue = strdup(yytext); 
+[a-zA-Z_][a-zA-Z0-9_]*  {yylval.sValue = strdup(yytext); 
                        return ID;}
 
 .                     {yyerror("invalid character");}

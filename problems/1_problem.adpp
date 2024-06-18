@@ -1,10 +1,8 @@
-import <math.h>;
-
-program prob1 {
+program prob1 { 
     decimal x = 2.5;
     decimal y = 3.7;
     int c = 5;
 
-    decimal result = x ^ x - y + c;
+    decimal result = x ^ 2 - y + c;
     printf("%2.f", result);
 }

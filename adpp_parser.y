@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <time.h>
 
 #include "../lib/entry.h"
 #include "../lib/hash_table.h"
@@ -11,7 +12,8 @@ int yylex(void);
 int yyerror(char *s);
 char *cat(int, ...);
 void populateTypeTablePrimitives();
-void print_entry(const char* key, const char* value);
+void insert_imports(const char*, const char*);
+void generateRandomId(char *, int);
 
 extern int yylineno;
 extern char * yytext;
@@ -38,7 +40,7 @@ HashTable * type_table;
 %token NOT COMPARISON DIFFERENT LESS_THAN MORE_THAN LESS_THAN_EQUALS MORE_THAN_EQUALS PLUS MINUS POWER TIMES SPLIT MOD INCREMENT DECREMENT
 %token HASH
 %token AND OR PIPE AMPERSAND DOLLAR
-%token ARRAY DICT RECORD IMPORT STATIC
+%token ARRAY DICT RECORD IMPORT GLOBAL
 
 %token IF ELSE FOR RETURN SWITCH CASE DEFAULT BREAK CONTINUE DO WHILE TRY CATCH FINALLY THROW 
 
@@ -58,8 +60,15 @@ HashTable * type_table;
             stmts,
             stmt,
             import_stmt,
+            record_stmt,
+            global_stmt,
+            record_block,
+            record_fields,
+            record_field,
             func_def,
+            param,
             params,
+            param_list,
             type,
             block,
             declaration,
@@ -81,15 +90,24 @@ HashTable * type_table;
             exp_lv_3,
             exp_lv_2,
             exp_lv_1,
+            if_stmt,
+            for_stmt,
+            while_stmt,
+            do_while_stmt,
+            try_catch_stmt,
+            switch_stmt,
+            return_stmt,
+            break_stmt,
+            continue_stmt,
+            throw_stmt
 
 %start file
 
 %%
 
-
 file            : pre_comp_directs func_defs main func_defs {
                     fprintf(yyout, "#include <stdio.h>\n");
-                    
+                    iterate_table(type_table, insert_imports);
                     fprintf(yyout, "%s\n%s\n%s\n%s", $1->code, $2->code, $4->code, $3->code);
                     free_entry($1);
                     free_entry($2);
@@ -107,9 +125,21 @@ pre_comp_directs: {$$ = create_entry("","");}
                     free(s);
                 }
 
-pre_comp_direct : record_stmt
-                | import_stmt
-                | static_stmt
+pre_comp_direct : record_stmt {
+                    char * s = cat(1, $1->code);
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | import_stmt {
+                    $$ = create_entry("", "");
+                }
+                | global_stmt {
+                    char * s = cat(1, $1->code);
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
                 ;
 
 main            : {$$ = create_entry("","");}
@@ -141,17 +171,72 @@ stmt            : ';' {$$ = create_entry(";","");}
                     $$ = create_entry(s, "");
                     free(s);
                 }
-                | if_stmt
-                | for_stmt
-                | while_stmt
-                | do_while_stmt
-                | try_catch_stmt
-                | switch_stmt
-                | return_stmt ';'
-                | break_stmt ';'
-                | continue_stmt ';'
-                | throw_stmt ';'
-                | atrib ';'
+                | if_stmt {
+                    char * s = cat(2, $1->code, "\n");
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | for_stmt {
+                    char * s = cat(2, $1->code, "\n");
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | while_stmt {
+                    char * s = cat(2, $1->code, "\n");
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | do_while_stmt {
+                    char * s = cat(2, $1->code, "\n");
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | try_catch_stmt {
+                    char * s = cat(2, $1->code, "\n");
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | switch_stmt {
+                    char * s = cat(2, $1->code, "\n");
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | return_stmt ';' {
+                    char * s = cat(2, $1->code, ";\n");
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | break_stmt ';' {
+                    char * s = cat(2, $1->code, ";\n");
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | continue_stmt ';' {
+                    char * s = cat(2, $1->code, ";\n");
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | throw_stmt ';' {
+                    char * s = cat(2, $1->code, ";\n");
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | atrib ';' {
+                    char * s = cat(2, $1->code, ";\n");
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
                 | declaration ';' {
                     char * s = cat(2, $1->code, ";\n");
                     free_entry($1);
@@ -168,32 +253,55 @@ type            : PRIMITIVE {
                         free(s);
                     } else {
                         yyerror("Unable to find declareted primitive");
+                        free($1);
+                        exit(1);
                     }
                 }
                 | ARRAY LESS_THAN type MORE_THAN
                 | DICT LESS_THAN type ',' type MORE_THAN
-                | type TIMES ;
+                | type TIMES {
+                    char * s = cat(2, $1->code, " *");
+                    free($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | HASH ID {
+                    char * s = cat(1, $2);
+                    free($2);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
 
 func_defs       : {$$ = create_entry("","");}
-                | func_def func_defs
+                | func_def func_defs {
+                    char * s = cat(3, $1->code, "\n", $2->code);
+                    free_entry($1);
+                    free_entry($2);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
 
 func_def        : SUBPROGRAM ID '(' params ')' ':' type block {
                     char * funcProt = cat(6, $7->code, " ", $2, "(", $4->code, ")");
 
                     if (strcmp("long main()", funcProt) == 0) {
+                        yyerror("Function main is reservated by the compiller");
                         free(funcProt);
                         free($2);
                         free_entry($7);
                         free_entry($8);
-                        yyerror("Function main is reservated by the compiller");
+                        exit(1);
                     }
                     
                     if(exists_on_table(type_table, funcProt)) {
+                        yyerror(cat(3, "Function ", $2, " has arready bean declareted."));
                         free(funcProt);
                         free($2);
                         free_entry($7);
                         free_entry($8);
-                        yyerror("Function has arready bean declareted");
+                        exit(1);
                     }
 
                     add_to_table(type_table, funcProt, "#FUNCTION");
@@ -205,16 +313,40 @@ func_def        : SUBPROGRAM ID '(' params ')' ':' type block {
                     $$ = create_entry(s, "");
                     free(s);
                 }
-
-;
+                ;
 
 params          : {$$ = create_entry("","");}
-                | param_list ;
+                | param_list {
+                    char * s = cat(1, $1->code);
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
 
-param_list      : param 
-                | param ',' param_list ;
+param_list      : param {
+                    char * s = cat(1, $1->code);
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | param ',' param_list {
+                    char * s = cat(3, $1->code, ", ", $3->code);
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
 
-param           : type ID ;
+param           : type ID {
+                    char * s = cat(3, $1->code, " ", $2);
+                    free_entry($1);
+                    free($2);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
 
 block           : '{' stmts '}' {
                     char * s = cat(3, "{\n", $2->code, "}");
@@ -344,6 +476,13 @@ exp_lv_4        : exp_lv_4 TIMES exp_lv_3 {
                     $$ = create_entry(s, "");
                     free(s);
                 }
+                | exp_lv_4 TIMES MINUS exp_lv_3 {
+                    char * s = cat(3, $1->code, " * -", $4->code);
+                    free_entry($1);
+                    free_entry($4);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
                 | exp_lv_4 SPLIT exp_lv_3 {
                     char * s = cat(3, $1->code, " / ", $3->code);
                     free_entry($1);
@@ -367,9 +506,9 @@ exp_lv_4        : exp_lv_4 TIMES exp_lv_3 {
                 ;
 
 exp_lv_3        : exp_lv_3 POWER exp_lv_2 {
-                    char * s = cat(5, "pow(", $1->code, ", ", $3->code, " + 0.0)");
-                    if(!exists_on_table(type_table, "#include \"math.h\"")){
-                        add_to_table(type_table, "#include \"math.h\"", "#IMPORT");
+                    char * s = cat(6, "pow(", $1->code, "+ 0.0", ", ", $3->code, " + 0.0)");
+                    if(!exists_on_table(type_table, "#include <math.h>")){
+                        add_to_table(type_table, "#include <math.h>", "#IMPORT");
                     }
 
                     free_entry($1);
@@ -562,11 +701,14 @@ declaration     : type atrib {
                     $$ = create_entry(s, "");
                     free(s);
                 }
-                | type ID ;
-                | ID atrib;
-                | ID ID {
-                    // TODO consultar a tabela de tipos e verificar se o primeiro id é um tipo
-                };
+                | type ID {
+                    char * s = cat(3, $1->code, " ", $2);
+                    free_entry($1);
+                    free($2);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
 
 atrib           : ID '=' expression {
                     char * s = cat(3, $1, "=", $3->code);
@@ -575,19 +717,85 @@ atrib           : ID '=' expression {
                     $$ = create_entry(s, "");
                     free(s);
                 }
-                | ID INCREMENT
-                | ID DECREMENT
-                | access '=' expression;
+                | ID INCREMENT {
+                    char * s = cat(2, $1, "++");
+                    free($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | ID DECREMENT {
+                    char * s = cat(2, $1, "--");
+                    free($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | access '=' expression {
+                    char * s = cat(3, $1->code, "=", $3->code);
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | expression '=' expression {
+                    char * s = cat(3, $1->code, "=", $3->code);
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
 
-if_stmt         : IF '(' expression ')' block
-                | IF '(' expression ')' block ELSE block ;
+if_stmt         : IF '(' expression ')' block {
+                    char * s = cat(4, "if(", $3->code, ") ", $5->code);
+                    free_entry($3);
+                    free_entry($5);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | IF '(' expression ')' block ELSE block {
+                    char * s = cat(6, "if(", $3->code, ") ", $5->code, " else ", $7->code);
+                    free_entry($3);
+                    free_entry($5);
+                    free_entry($7);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | IF '(' expression ')' block ELSE if_stmt {
+                    char * s = cat(6, "if(", $3->code, ") ", $5->code, " else ", $7->code);
+                    free_entry($3);
+                    free_entry($5);
+                    free_entry($7);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
 
-for_stmt        : FOR '(' for_part ';' expression ';' for_part ')' block ;
+for_stmt        : FOR '(' for_part ';' expression ';' for_part ')' block {
+
+                }
+                ;
 
 for_part        : atrib
                 | declaration ;
 
-while_stmt      : WHILE '(' expression ')' block ;
+while_stmt      : WHILE '(' expression ')' block {
+                    char * startGoto = malloc(sizeof(char)*21);
+                    generateRandomId(startGoto, 21);
+
+                    char * endGoto = malloc(sizeof(char)*21);
+                    generateRandomId(endGoto, 21);
+
+                    char * s = cat(13, startGoto, ":\n", "if(!(", $3->code, ")) goto ", endGoto, ";\n", $5->code, "\ngoto ", startGoto, ";\n", endGoto, ":\n");
+
+                    free_entry($3);
+                    free_entry($5);
+
+                    free(startGoto);
+                    free(endGoto);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
 
 do_while_stmt   : DO block WHILE '(' expression ')' ';' ;
 
@@ -602,7 +810,13 @@ case_stmts      : /* vazio */
 case_stmt       : CASE literal ':' stmts
                 | DEFAULT ':' stmts ;
 
-return_stmt     : RETURN expression ;
+return_stmt     : RETURN expression {
+                    char * s = cat(2, "return ", $2->code, ";");
+                    free_entry($2);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
 
 break_stmt      : BREAK ;
 
@@ -628,21 +842,74 @@ import_stmt     : IMPORT STRING ';' {
                 }
                 ;
 
-static_stmt     : STATIC func_def ;
+global_stmt     : GLOBAL declaration ';' {
+                    char * s = cat(2, $2->code, ";");
+                    free_entry($2);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
 
-record_stmt     : RECORD ID  ':' record_block
+record_stmt     : RECORD ID record_block {
+                    char * structText = cat(2, "struct ", $2);
+                    if(!exists_on_table(type_table, structText)){
+                        add_to_table(type_table, structText, "#STRUCT");
+                    } else {
+                        yyerror(cat(3, "Struct ", $2, " has arready bean declareted."));
+                        free($2);
+                        free_entry($3);
+                        exit(1);
+                    }
+                    char * s = cat(5, "typedef struct {", $3->code, "} ", $2, ";");
+                    free($2);
+                    free_entry($3);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
 
-record_block    : '{' record_fields '}'
+record_block    : '{' record_fields '}' {
+                    char * s = cat(1, $2->code);
+                    free_entry($2);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
 
-record_fields   : record_field
-                | record_field ',' record_fields
+record_fields   : record_field {
+                    char * s = cat(1, $1->code);
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | record_field ',' record_fields {
+                    char * s = cat(3, $1->code, "; ", $3->code);
+                    free_entry($1);
+                    free_entry($3);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
 
-record_field    : type ID
-                | ID ID
-
+record_field    : type ID {
+                    char * s = cat(3, $1->code, " ", $2);
+                    free_entry($1);
+                    free($2);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }   
+                | ID ID {
+                    char * s = cat(3, $1, " ", $2);
+                    free($1);
+                    free($2);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
 %%
 
 int main (int argc, char ** argv) {
+    srand(time(NULL));
     int status;
     yylineno = 1;
 
@@ -684,8 +951,6 @@ int main (int argc, char ** argv) {
 
     status = yyparse();
 
-    iterate_table(type_table, print_entry);
-
     fclose(yyin);
     fclose(yyout);
     free(outputFilename);
@@ -694,8 +959,10 @@ int main (int argc, char ** argv) {
     return status;
 }
 
-void print_entry(const char* key, const char* value) {
-    printf("Key: %s, Value: %s\n", key, value);
+void insert_imports(const char* key, const char* value) {
+    if(strcmp(value, "#IMPORT") == 0) {
+        fprintf(yyout, "%s\n", key);
+    }
 }
 
 int yyerror (char *msg) {
@@ -742,4 +1009,14 @@ void populateTypeTablePrimitives() {
     add_to_table(type_table, "char", "char");
     add_to_table(type_table, "rec", "typedef struct");
     add_to_table(type_table, "void", "void");
+}
+
+void generateRandomId(char *str, int size) {
+    const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    int i;
+    for (i = 0; i < size - 1; i++) {
+        int key = rand() % (sizeof(charset) - 1);
+        str[i] = charset[key];
+    }
+    str[size - 1] = '\0';
 }

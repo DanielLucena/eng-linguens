@@ -1,6 +1,6 @@
 BIN_DIRECTORY := bin
 
-all: compile_test
+all: compile_problems
 	
 build: create_bin_directory
 	@echo "BUILDING COMPILER"
@@ -15,11 +15,32 @@ build: create_bin_directory
 
 	gcc -o ADPP bin/adpp.yy.c bin/y.tab.c lib/entry.c lib/hash_table.c
 
-compile_test: clean build
-	@echo "RUNNING tests\n"
+test: clean build
+	@echo "COMPILING TESTS\n"
 
-	./ADPP examples/prob1.adpp
+	@echo "TEST 1\n"
+	./ADPP tests/simple.adpp
 
+compile_problems: clean build
+	@echo "COMPILING EXAMPLE PROBLEMS\n"
+
+	@echo "PROBLEM 1\n"
+	./ADPP problems/1_problem.adpp
+
+	@echo "PROBLEM 2\n"
+	./ADPP problems/2_problem.adpp
+	
+	@echo "PROBLEM 3\n"
+	./ADPP problems/3_problem.adpp
+	
+	@echo "PROBLEM 4\n"
+	./ADPP problems/4_problem.adpp
+	
+	@echo "PROBLEM 5\n"
+	./ADPP problems/5_problem.adpp
+	
+	@echo "PROBLEM 6\n"
+	./ADPP problems/6_problem.adpp
 clean:
 	clear
 	

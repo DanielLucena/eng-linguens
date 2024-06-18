@@ -1,0 +1,32 @@
+func mdc(int n, int m, int* r): void {
+    if (m % n == 0) {
+        $r = n;
+    } else if (n % m == 0) {
+        $r = m;
+    } else if (m > n) {
+        mdc(n, m % n, r);
+    } else {
+        mdc(m, n % m, r);
+    }
+}
+
+program prob5 {
+    int n;
+    int m;
+    int resultado;
+    
+    printf("Digite dois números naturais estritamente positivos:\n");
+    printf("n: ");
+    scanf("%d", &n);
+    printf("m: ");
+    scanf("%d", &m);
+
+    if (n <= 0 || m <= 0) {
+        printf("Erro: Os números devem ser naturais estritamente positivos.\n");
+    } else {
+        mdc(n, m, &resultado);
+        printf("O maior divisor comum de %d e %d é: %d\n", n, m, resultado);
+    }
+
+    return 0;
+}

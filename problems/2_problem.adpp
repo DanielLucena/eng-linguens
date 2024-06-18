@@ -1,0 +1,32 @@
+global int _0to25 = 0;
+global int _26to50 = 0;
+global int _51to75 = 0;
+global int _76to100 = 0;
+
+program prob2 {
+    int num = 0;
+
+    printf("Digite um numero (negativo para terminar): ");
+    scanf("%d", &num);
+    
+    while (num >= 0) {
+        if (num >= 0 && num <= 25) {
+            _0to25++;
+        } else if (num >= 26 && num <= 50) {
+            _26to50++;
+        } else if (num >= 51 && num <= 75) {
+            _51to75++;
+        } else if (num >= 76 && num <= 100) {
+            _76to100++;
+        }
+        printf("Digite um numero (negativo para terminar): ");
+        scanf("%d", &num);
+    }
+
+
+    printf("\nQuantidades nos intervalos:\n");
+    printf("[0, 25]: %d\n", _0to25);
+    printf("[26, 50]: %d\n", _26to50);
+    printf("[51, 75]: %d\n", _51to75);
+    printf("[76, 100]: %d\n", _76to100);
+}
