@@ -7,6 +7,7 @@
 
 #include "../lib/entry.h"
 #include "../lib/hash_table.h"
+#include "../lib/stack.h"
 
 int yylex(void);
 int yyerror(char *s);
@@ -19,6 +20,7 @@ extern int yylineno;
 extern char * yytext;
 extern FILE * yyin, * yyout;
 HashTable * type_table;
+Stack * scope_stack;
 %}
 
 %union {
@@ -38,9 +40,9 @@ HashTable * type_table;
 %token PROGRAM SUBPROGRAM
 
 %token NOT COMPARISON DIFFERENT LESS_THAN MORE_THAN LESS_THAN_EQUALS MORE_THAN_EQUALS PLUS MINUS POWER TIMES SPLIT MOD INCREMENT DECREMENT
-%token HASH
+%token HASH NEW PTRACCESS NULLTK
 %token AND OR PIPE AMPERSAND DOLLAR
-%token ARRAY DICT RECORD IMPORT GLOBAL
+%token ARRAY RECORD IMPORT GLOBAL
 
 %token IF ELSE FOR RETURN SWITCH CASE DEFAULT BREAK CONTINUE DO WHILE TRY CATCH FINALLY THROW 
 
@@ -92,9 +94,9 @@ HashTable * type_table;
             exp_lv_1,
             if_stmt,
             for_stmt,
+            for_part,
             while_stmt,
             do_while_stmt,
-            try_catch_stmt,
             switch_stmt,
             return_stmt,
             break_stmt,
@@ -105,14 +107,17 @@ HashTable * type_table;
 
 %%
 
-file            : pre_comp_directs func_defs main func_defs {
+file            : {push_on_stack(scope_stack, "ADPP");} pre_comp_directs func_defs main func_defs {
                     fprintf(yyout, "#include <stdio.h>\n");
+                    fprintf(yyout, "#include <stdlib.h>\n");
+                    fprintf(yyout, "#include <limits.h>\n");
+
                     iterate_table(type_table, insert_imports);
-                    fprintf(yyout, "%s\n%s\n%s\n%s", $1->code, $2->code, $4->code, $3->code);
-                    free_entry($1);
+                    fprintf(yyout, "%s\n%s\n%s\n%s", $2->code, $3->code, $5->code, $4->code);
                     free_entry($2);
                     free_entry($3);
                     free_entry($4);
+                    free_entry($5);
                 }
                 ;
 
@@ -195,12 +200,6 @@ stmt            : ';' {$$ = create_entry(";","");}
                     $$ = create_entry(s, "");
                     free(s);
                 }
-                | try_catch_stmt {
-                    char * s = cat(2, $1->code, "\n");
-                    free_entry($1);
-                    $$ = create_entry(s, "");
-                    free(s);
-                }
                 | switch_stmt {
                     char * s = cat(2, $1->code, "\n");
                     free_entry($1);
@@ -257,8 +256,12 @@ type            : PRIMITIVE {
                         exit(1);
                     }
                 }
-                | ARRAY LESS_THAN type MORE_THAN
-                | DICT LESS_THAN type ',' type MORE_THAN
+                | ARRAY '[' type ']' {
+                    char * s = cat(2, $3->code, " *");
+                    free_entry($3);
+                    $$ = create_entry(s, s);
+                    free(s);
+                }
                 | type TIMES {
                     char * s = cat(2, $1->code, " *");
                     free($1);
@@ -266,7 +269,7 @@ type            : PRIMITIVE {
                     free(s);
                 }
                 | HASH ID {
-                    char * s = cat(1, $2);
+                    char * s = cat(2, "struct ", $2);
                     free($2);
                     $$ = create_entry(s, "");
                     free(s);
@@ -357,7 +360,24 @@ block           : '{' stmts '}' {
 ;
 
 expression      : expression '?' expression ':' expression {
-                    // TODO verificar se tem ternário em C
+                    char * s = cat(7, "(", $1->code, " ? ", $3->code, " : ", $5->code, ")");
+                    free_entry($1);
+                    free_entry($3);
+                    free_entry($5);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | NEW type {
+                    char * s = cat(5, "(", $2->code, " *)malloc(sizeof(", $2->code, "))");
+                    free_entry($2);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | NEW type '[' expression ']'{
+                    char * s = cat(7, "(", $2->code, " *)malloc(", $4->code, " * sizeof(", $2->code, "))");
+                    free_entry($2);
+                    $$ = create_entry(s, "");
+                    free(s);
                 }
                 | exp_lv_8 {
                     char * s = cat(1, $1->code);
@@ -447,7 +467,12 @@ exp_lv_6        : exp_lv_6 MORE_THAN exp_lv_5 {
                 }
                 ;
 
-exp_lv_5        : exp_lv_5 PLUS exp_lv_4 {
+exp_lv_5        : NULLTK {
+                    char * s = cat(1, "NULL");
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | exp_lv_5 PLUS exp_lv_4 {
                     char * s = cat(3, $1->code, " + ", $3->code);
                     free_entry($1);
                     free_entry($3);
@@ -597,6 +622,13 @@ access          : ID '[' expression ']' {
                 }
                 | ID '.' ID {
                     char * s = cat(3, $1, ".", $3);
+                    free($1);
+                    free($3);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | ID PTRACCESS ID {
+                    char * s = cat(3, $1, "->", $3);
                     free($1);
                     free($3);
                     $$ = create_entry(s, "");
@@ -771,12 +803,40 @@ if_stmt         : IF '(' expression ')' block {
                 ;
 
 for_stmt        : FOR '(' for_part ';' expression ';' for_part ')' block {
+                    char * startGoto = malloc(sizeof(char)*21);
+                    generateRandomId(startGoto, 21);
 
+                    char * endGoto = malloc(sizeof(char)*21);
+                    generateRandomId(endGoto, 21);
+
+                    char * s = cat(18, "{", $3->code, ";\n", startGoto, ":\n", "if(!(", $5->code, ")) goto ", endGoto, ";\n", $9->code, "\n", $7->code, ";\ngoto ", startGoto, ";\n", endGoto, ":\n}");
+
+                    free_entry($3);
+                    free_entry($5);
+                    free_entry($7);
+                    free_entry($9);
+
+                    free(startGoto);
+                    free(endGoto);
+
+                    $$ = create_entry(s, "");
+                    free(s);
                 }
                 ;
 
-for_part        : atrib
-                | declaration ;
+for_part        : atrib {
+                    char * s = cat(1, $1->code);
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | declaration {
+                    char * s = cat(1, $1->code);
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
 
 while_stmt      : WHILE '(' expression ')' block {
                     char * startGoto = malloc(sizeof(char)*21);
@@ -799,9 +859,6 @@ while_stmt      : WHILE '(' expression ')' block {
 
 do_while_stmt   : DO block WHILE '(' expression ')' ';' ;
 
-try_catch_stmt  : TRY block CATCH '(' ID ')' block
-                | TRY block CATCH '(' ID ')' block FINALLY block ;
-
 switch_stmt     : SWITCH '(' expression ')' '{' case_stmts '}' ;
 
 case_stmts      : /* vazio */
@@ -810,7 +867,12 @@ case_stmts      : /* vazio */
 case_stmt       : CASE literal ':' stmts
                 | DEFAULT ':' stmts ;
 
-return_stmt     : RETURN expression {
+return_stmt     : RETURN {
+                    char * s = cat(1, "return");
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                |RETURN expression {
                     char * s = cat(2, "return ", $2->code, ";");
                     free_entry($2);
                     $$ = create_entry(s, "");
@@ -860,7 +922,7 @@ record_stmt     : RECORD ID record_block {
                         free_entry($3);
                         exit(1);
                     }
-                    char * s = cat(5, "typedef struct {", $3->code, "} ", $2, ";");
+                    char * s = cat(7, "typedef struct ", $2 ," {", $3->code, "} ", $2, ";");
                     free($2);
                     free_entry($3);
                     $$ = create_entry(s, "");
@@ -869,7 +931,7 @@ record_stmt     : RECORD ID record_block {
                 ;
 
 record_block    : '{' record_fields '}' {
-                    char * s = cat(1, $2->code);
+                    char * s = cat(2, $2->code, ";");
                     free_entry($2);
                     $$ = create_entry(s, "");
                     free(s);
@@ -946,6 +1008,7 @@ int main (int argc, char ** argv) {
     }
 
     type_table = create_table();
+    scope_stack = create_stack();
 
     populateTypeTablePrimitives();
 

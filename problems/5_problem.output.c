@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
 
 void mdc(long n, long m, long * r){
 if(m % n == 0) {
@@ -19,14 +21,14 @@ long m;
 long resultado;
 printf("Digite dois números naturais estritamente positivos:\n");
 printf("n: ");
-scanf("%d", (&n));
+scanf("%ld", (&n));
 printf("m: ");
-scanf("%d", (&m));
+scanf("%ld", (&m));
 if(n <= 0 || m <= 0) {
 printf("Erro: Os números devem ser naturais estritamente positivos.\n");
 } else {
 mdc(n, m, (&resultado));
-printf("O maior divisor comum de %d e %d é: %d\n", n, m, resultado);
+printf("O maior divisor comum de %ld e %ld é: %ld\n", n, m, resultado);
 }
 return 0;
 

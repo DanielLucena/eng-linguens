@@ -1,31 +1,12 @@
 #include <stdio.h>
-long a=3;
-long b=5;
+#include <stdlib.h>
+#include <limits.h>
 
 
 
 int main() {
-PAIWzPPibEVCvBFtRcAv:
-if(!(1)) goto RxhlipNZOLpgOzcnRtwS;
-{
-KEmrifsUySCRExhThKnM:
-if(!(2)) goto ZQGcwOxgcnXMtjFCRXYp;
-{
-MmcRrebSgwPwHcryMtAf:
-if(!(3)) goto sMVOpKbtdpbrBeiviLPQ;
-{
-}
-goto MmcRrebSgwPwHcryMtAf;
-sMVOpKbtdpbrBeiviLPQ:
-
-}
-goto KEmrifsUySCRExhThKnM;
-ZQGcwOxgcnXMtjFCRXYp:
-
-}
-goto PAIWzPPibEVCvBFtRcAv;
-RxhlipNZOLpgOzcnRtwS:
-
+long * a=(long *)malloc(5 * sizeof(long));
+long * * b=(long * *)malloc(5 * sizeof(long *));
 
 return 0;
 }

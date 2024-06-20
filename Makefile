@@ -13,7 +13,7 @@ build: create_bin_directory
 	mv y.tab.h bin/y.tab.h
 	mv y.output bin/y.output
 
-	gcc -o ADPP bin/adpp.yy.c bin/y.tab.c lib/entry.c lib/hash_table.c
+	gcc -o ADPP bin/adpp.yy.c bin/y.tab.c lib/entry.c lib/hash_table.c lib/stack.c
 
 test: clean build
 	@echo "COMPILING TESTS\n"
@@ -26,21 +26,27 @@ compile_problems: clean build
 
 	@echo "PROBLEM 1\n"
 	./ADPP problems/1_problem.adpp
+	gcc problems/1_problem.output.c -o problems/1_problem -lm
 
 	@echo "PROBLEM 2\n"
 	./ADPP problems/2_problem.adpp
+	gcc problems/2_problem.output.c -o problems/2_problem -lm
 	
 	@echo "PROBLEM 3\n"
 	./ADPP problems/3_problem.adpp
+	gcc problems/3_problem.output.c -o problems/3_problem -lm
 	
 	@echo "PROBLEM 4\n"
 	./ADPP problems/4_problem.adpp
+	gcc problems/4_problem.output.c -o problems/4_problem -lm
 	
 	@echo "PROBLEM 5\n"
 	./ADPP problems/5_problem.adpp
+	gcc problems/5_problem.output.c -o problems/5_problem -lm
 	
 	@echo "PROBLEM 6\n"
 	./ADPP problems/6_problem.adpp
+	gcc problems/6_problem.output.c -o problems/6_problem -lm
 clean:
 	clear
 	

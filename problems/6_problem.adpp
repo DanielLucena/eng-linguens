@@ -1,0 +1,119 @@
+rec Node {
+    int chave,
+    #Node *esquerda,
+    #Node *direita
+}
+
+func novoNo(int chave) : #Node* {
+    #Node* temp = new #Node;
+    temp->chave = chave;
+    temp->esquerda = NULL;
+    temp->direita = NULL;
+    return temp;
+}
+
+func inserir(#Node* node, int chave): #Node* {
+    if (node == NULL) {
+        return novoNo(chave);
+    }
+    int cv = node->chave;
+    if (chave < cv) {
+        node->esquerda = inserir(node->esquerda, chave);
+    } else if (chave > cv) {
+        node->direita = inserir(node->direita, chave);
+    }
+
+    return node;
+}
+
+func encontrarMinimo(#Node* node, int nivel, int* minChave, int* minNivel): void {
+    if (node == NULL) {
+        return;
+    }
+    int cv = node->chave;
+
+    if (cv < $minChave) {
+        $minChave = node->chave;
+        $minNivel = nivel;
+    }
+
+    encontrarMinimo(node->esquerda, nivel + 1, minChave, minNivel);
+}
+
+func encontrarMaximo(#Node* node, int nivel, int* maxChave, int* maxNivel): void {
+    if (node == NULL) {
+        return;
+    }
+
+    int cv = node->chave;
+    if (cv > $maxChave) {
+        $maxChave = node->chave;
+        $maxNivel = nivel;
+    }
+
+    encontrarMaximo(node->direita, nivel + 1, maxChave, maxNivel);
+}
+
+func imprimirNivel(#Node* node, int nivel): void {
+    if (node == NULL) {
+        return;
+    }
+
+    if (nivel == 1) {
+        printf("%ld ", node->chave);
+    } else if (nivel > 1) {
+        imprimirNivel(node->esquerda, nivel - 1);
+        imprimirNivel(node->direita, nivel - 1);
+    }
+}
+
+func altura(#Node* node): int {
+    if (node == NULL) {
+        return 0;
+    }
+
+    int esquerdaAltura = altura(node->esquerda);
+    int direitaAltura = altura(node->direita);
+    
+    return  (esquerdaAltura > direitaAltura ? esquerdaAltura : direitaAltura) + 1;
+}
+
+func imprimirArvore(#Node* root): void {
+    int h = altura(root);
+    for(int i = 1; i <= h; i++) {
+        imprimirNivel(root, 1);
+        printf("\n");
+    }
+}
+
+program prob6 {
+    #Node* root = NULL;
+
+    array[int] valores = new int[7];
+    valores[0] = 50;
+    valores[1] = 30;
+    valores[2] = 20;
+    valores[3] = 40;
+    valores[4] = 70;
+    valores[5] = 60;
+    valores[6] = 80;
+
+    int n = sizeof(valores) / sizeof(valores[0]);
+
+    for (int i = 0; i < n; i++) {
+        root = inserir(root, valores[i]);
+    }
+
+    int minChave = INT_MAX;
+    int minNivel = 0;
+    encontrarMinimo(root, 1, &minChave, &minNivel);
+    printf("Chave mínima: %ld, Nível: %ld\n", minChave, minNivel);
+
+    int maxChave = INT_MIN;
+    int maxNivel = 0;
+    encontrarMaximo(root, 1, &maxChave, &maxNivel);
+    printf("Chave máxima: %ld, Nível: %ld\n", maxChave, maxNivel);
+
+    printf("Árvore nível a nível:\n");
+    imprimirArvore(root);
+}

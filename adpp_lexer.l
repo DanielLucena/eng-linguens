@@ -81,7 +81,6 @@
                        return PRIMITIVE;}
 "array"               {return ARRAY;}
 "rec"                 {return RECORD;}
-"dict"                {return DICT;}
 "void"                {yylval.sValue = strdup("void"); 
                        return PRIMITIVE;}
 
@@ -94,6 +93,9 @@
 "import"              {return(IMPORT);}
 "global"              {return(GLOBAL);}
 "return"              {return(RETURN);}
+"new"                 {return(NEW);}
+"->"                  {return(PTRACCESS);}
+"NULL"                {return(NULLTK);}
 
 \/\/.*\n?             {yylineno++;}
 
