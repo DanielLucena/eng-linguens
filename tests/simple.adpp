@@ -1,7 +1,5 @@
+global int x;
+global int x;
+
 program progress {
-    array [int] a = new int[5];
-
-    array [array[int]] b = new int[5][5];
-
-    array
 }

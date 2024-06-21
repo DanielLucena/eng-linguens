@@ -4,78 +4,78 @@
 
 void leMatriz(long * * matriz, long linhas, long colunas){
 {long i=0;
-zRihLDuyyBjWDrtwGhos:
-if(!(i < linhas)) goto vdnNjjFxKcCMvmThQPFQ;
+MMRVsjcudjCFyEZpTxVX:
+if(!(i < linhas)) goto iEztDvsXCayQNpMHaqbd;
 {
 {long j=0;
-idOAAiEBRYudfUvnlsEK:
-if(!(j < colunas)) goto ycGUroORkMnUQDuSoBVf;
+xzqSmSNhhdeOHesgzshi:
+if(!(j < colunas)) goto CoASpoWFCLhCkZuZRhgB;
 {
 printf("Elemento [%ld][%ld]: ", i, j);
 scanf("%ld", (&matriz[i][j]));
 }
 j++;
-goto idOAAiEBRYudfUvnlsEK;
-ycGUroORkMnUQDuSoBVf:
+goto xzqSmSNhhdeOHesgzshi;
+CoASpoWFCLhCkZuZRhgB:
 }
 }
 i++;
-goto zRihLDuyyBjWDrtwGhos;
-vdnNjjFxKcCMvmThQPFQ:
+goto MMRVsjcudjCFyEZpTxVX;
+iEztDvsXCayQNpMHaqbd:
 }
 }
 void imprimeMatriz(long * * matriz, long linhas, long colunas){
 {long i=0;
-fCrtcQQLVKGhIQmvqCXi:
-if(!(i < linhas)) goto xqrlzxLpUbUaENVGEMTb;
+deMXHZShgnLofEKPnOyK:
+if(!(i < linhas)) goto wljHmJfxAhtflgcuHwdO;
 {
 {long j=0;
-qqMwkHSsOIKkMzXVJfUV:
-if(!(j < colunas)) goto JYHfkAOCqVsiOHEYoxqF;
+zEkzKMrDjmdssCLVYFSc:
+if(!(j < colunas)) goto hSTwhhehxfMylzAWlRbu;
 {
 printf("%ld ", matriz[i][j]);
 }
 j++;
-goto qqMwkHSsOIKkMzXVJfUV;
-JYHfkAOCqVsiOHEYoxqF:
+goto zEkzKMrDjmdssCLVYFSc;
+hSTwhhehxfMylzAWlRbu:
 }
 printf("\n");
 }
 i++;
-goto fCrtcQQLVKGhIQmvqCXi;
-xqrlzxLpUbUaENVGEMTb:
+goto deMXHZShgnLofEKPnOyK;
+wljHmJfxAhtflgcuHwdO:
 }
 }
 void somaMatrizes(long * * a, long * * b, long linhas, long colunas){
 long * * soma=(long * *)malloc(linhas * sizeof(long *));
 {long i=0;
-wbiHRWcKyZSyRLlSjXiF:
-if(!(i < linhas)) goto AEFesBmWnHXlJIScgwMh;
+JPcrVMgjdETbrEIfnqCp:
+if(!(i < linhas)) goto xWWkEYFlXIZGZbzVqFeV;
 {
 soma[i]=(long *)malloc(colunas * sizeof(long));
 }
 i++;
-goto wbiHRWcKyZSyRLlSjXiF;
-AEFesBmWnHXlJIScgwMh:
+goto JPcrVMgjdETbrEIfnqCp;
+xWWkEYFlXIZGZbzVqFeV:
 }
 {long i=0;
-ggsFxPXQamxuCtyAhEEU:
-if(!(i < linhas)) goto wQFYKksvwpYDYqKvHHlj;
+oCTCHztnKYQIDCdnNVnf:
+if(!(i < linhas)) goto RKMmdYoexHCLjYPsxjiK;
 {
 {long j=0;
-YhFrSskDpsjQyOwQRloG:
-if(!(j < colunas)) goto SOuBYOgelSlLZscuLmXa;
+MzWFegLrwPjTnfGReldD:
+if(!(j < colunas)) goto vEjvilqaQWVevtmzzXty;
 {
 soma[i][j]=a[i][j] + b[i][j];
 }
 j++;
-goto YhFrSskDpsjQyOwQRloG;
-SOuBYOgelSlLZscuLmXa:
+goto MzWFegLrwPjTnfGReldD;
+vEjvilqaQWVevtmzzXty:
 }
 }
 i++;
-goto ggsFxPXQamxuCtyAhEEU;
-wQFYKksvwpYDYqKvHHlj:
+goto oCTCHztnKYQIDCdnNVnf;
+RKMmdYoexHCLjYPsxjiK:
 }
 printf("Soma das Matrizes:\n");
 imprimeMatriz(soma, linhas, colunas);
@@ -83,42 +83,42 @@ imprimeMatriz(soma, linhas, colunas);
 void produtoMatrizes(long * * a, long * * b, long linhasA, long colunasA, long colunasB){
 long * * produto=(long * *)malloc(linhasA * sizeof(long *));
 {long i=0;
-vkEXfcxPGEJEWRCGDwcZ:
-if(!(i < linhasA)) goto oCemSqHcYulVhPTmRSbx;
+JYsOcXbPSQxlAjZDJnIg:
+if(!(i < linhasA)) goto wMRhKHAKsIuDiosllVCF;
 {
 produto[i]=(long *)malloc(colunasB * sizeof(long));
 }
 i++;
-goto vkEXfcxPGEJEWRCGDwcZ;
-oCemSqHcYulVhPTmRSbx:
+goto JYsOcXbPSQxlAjZDJnIg;
+wMRhKHAKsIuDiosllVCF:
 }
 {long i=0;
-AcoqdXpaKMofHoWfWnLp:
-if(!(i < linhasA)) goto sktRpvDlugMwKCoOAEOM;
+TecSEZOaLqnqhhSBVyUw:
+if(!(i < linhasA)) goto fMmOjHUWIDgCHiuOhLOv;
 {
 {long j=0;
-nuiULpWsdZYpQzhxXNVL:
-if(!(j < colunasB)) goto uUapWIrGQDXezfAkuYCZ;
+NcdEVmfzxSXSZYvuUMCn:
+if(!(j < colunasB)) goto FpsZuNeQZHSoJxuglzhk;
 {
 {long k=0;
-wnEsGgBjffitHPFbfOdF:
-if(!(k < colunasA)) goto KpBReWeyOHxNUbHAKiJP;
+MZQmKPstFCzboTjBcllW:
+if(!(k < colunasA)) goto TFbDvVOGRTNfuDTfUlab;
 {
 produto[i][j]=produto[i][j] + a[i][k] * b[k][j];
 }
 k++;
-goto wnEsGgBjffitHPFbfOdF;
-KpBReWeyOHxNUbHAKiJP:
+goto MZQmKPstFCzboTjBcllW;
+TFbDvVOGRTNfuDTfUlab:
 }
 }
 j++;
-goto nuiULpWsdZYpQzhxXNVL;
-uUapWIrGQDXezfAkuYCZ:
+goto NcdEVmfzxSXSZYvuUMCn;
+FpsZuNeQZHSoJxuglzhk:
 }
 }
 i++;
-goto AcoqdXpaKMofHoWfWnLp;
-sktRpvDlugMwKCoOAEOM:
+goto TecSEZOaLqnqhhSBVyUw;
+fMmOjHUWIDgCHiuOhLOv:
 }
 printf("Produto das Matrizes:\n");
 imprimeMatriz(produto, linhasA, colunasB);
@@ -134,14 +134,14 @@ printf("Digite o número de colunas da matriz A: ");
 scanf("%ld", (&colunasA));
 long * * matrizA=(long * *)malloc(linhasA * sizeof(long *));
 {long i=0;
-qctXTRcPHpeZbZRqXWdT:
-if(!(i < linhasA)) goto ErppUDdWJtkaYEzRXeGE;
+bEnjLfmigIglWtCHaYDI:
+if(!(i < linhasA)) goto CJMLRJzBuQyvuLgHtVsz;
 {
 matrizA[i]=(long *)malloc(colunasA * sizeof(long));
 }
 i++;
-goto qctXTRcPHpeZbZRqXWdT;
-ErppUDdWJtkaYEzRXeGE:
+goto bEnjLfmigIglWtCHaYDI;
+CJMLRJzBuQyvuLgHtVsz:
 }
 printf("Digite os elementos da matriz A:\n");
 leMatriz(matrizA, linhasA, colunasA);
@@ -153,14 +153,14 @@ printf("Digite o número de colunas da matriz B: ");
 scanf("%ld", (&colunasB));
 long * * matrizB=(long * *)malloc(linhasB * sizeof(long *));
 {long i=0;
-VnEXmXPLTTEykTpGZsCI:
-if(!(i < linhasB)) goto npklTKcsqlXladKOCAAX;
+DymAtOhtpLERuqeOZERt:
+if(!(i < linhasB)) goto uprqCZXVURWaqLcJzjFq;
 {
 matrizB[i]=(long *)malloc(colunasB * sizeof(long));
 }
 i++;
-goto VnEXmXPLTTEykTpGZsCI;
-npklTKcsqlXladKOCAAX:
+goto DymAtOhtpLERuqeOZERt;
+uprqCZXVURWaqLcJzjFq:
 }
 printf("Digite os elementos da matriz B:\n");
 leMatriz(matrizB, linhasB, colunasB);

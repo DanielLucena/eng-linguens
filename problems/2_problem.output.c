@@ -13,8 +13,8 @@ long num=0;
 printf("Digite um numero (negativo para terminar): ");
 scanf("%ld", (&num));
 printf("%ld", num);
-FeQJcDeYBOMNxpdaeHNs:
-if(!(num >= 0)) goto WyGoyKjRYtBfZTObwSZY;
+GkBIErJTEHKbNJdKtgID:
+if(!(num >= 0)) goto fsecdHNAxzqdltMsLvlR;
 {
 if(num >= 0 && num <= 25) {
 _0to25++;
@@ -29,8 +29,8 @@ printf("Digite um numero (negativo para terminar): ");
 scanf("%ld", (&num));
 printf("%ld", num);
 }
-goto FeQJcDeYBOMNxpdaeHNs;
-WyGoyKjRYtBfZTObwSZY:
+goto GkBIErJTEHKbNJdKtgID;
+fsecdHNAxzqdltMsLvlR:
 
 printf("\nQuantidades nos intervalos:\n");
 printf("[0, 25]: %ld\n", _0to25);

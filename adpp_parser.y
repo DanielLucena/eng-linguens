@@ -734,6 +734,18 @@ declaration     : type atrib {
                     free(s);
                 }
                 | type ID {
+                    
+                    char * variable = cat(3, $2, "##", concat_stack_with_delimiter(scope_stack, "##"));
+                    
+                    if(exists_on_table(type_table, variable)) {
+                        free(variable);
+                        yyerror(cat(3, "Variable ", $2, " already declared on scope."));
+                        exit(0);
+                    }
+                    
+                    add_to_table(type_table, variable, $1->code);
+
+                    printf("%s\n", variable);
                     char * s = cat(3, $1->code, " ", $2);
                     free_entry($1);
                     free($2);
@@ -904,6 +916,7 @@ import_stmt     : IMPORT STRING ';' {
                 }
                 ;
 
+
 global_stmt     : GLOBAL declaration ';' {
                     char * s = cat(2, $2->code, ";");
                     free_entry($2);
@@ -1013,6 +1026,8 @@ int main (int argc, char ** argv) {
     populateTypeTablePrimitives();
 
     status = yyparse();
+
+    printf("%s\n", concat_stack_with_delimiter(scope_stack, "##"));
 
     fclose(yyin);
     fclose(yyout);

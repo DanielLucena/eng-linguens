@@ -143,3 +143,27 @@ void iterate_table(HashTable* table, void (*callback)(const char* key, const cha
         }
     }
 }
+
+bool check_scope_recursive(HashTable* table, const char* key) {
+    if (exists_on_table(table, key)) {
+        return true;
+    }
+
+    char* last_separator = strrchr(key, '#');
+    if (last_separator) {
+        size_t length = last_separator - key;
+        char* higher_level_key = (char*)malloc(length + 1);
+        strncpy(higher_level_key, key, length);
+        higher_level_key[length] = '\0';
+
+        bool result = check_scope_recursive(table, higher_level_key);
+        free(higher_level_key);
+        return result;
+    }
+
+    return false;
+}
+
+bool check_scope(HashTable* table, const char* key) {
+    return check_scope_recursive(table, key);
+}
