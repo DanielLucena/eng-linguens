@@ -19,7 +19,7 @@ test: clean build
 	@echo "COMPILING TESTS\n"
 
 	@echo "TEST 1\n"
-	./ADPP tests/simple.adpp
+	./ADPP tests/type_checking.adpp
 
 compile_problems: clean build
 	@echo "COMPILING EXAMPLE PROBLEMS\n"

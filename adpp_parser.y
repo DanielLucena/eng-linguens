@@ -15,6 +15,10 @@ char *cat(int, ...);
 void populateTypeTablePrimitives();
 void insert_imports(const char*, const char*);
 void generateRandomId(char *, int);
+void checkTypeBinaryOperatorExpression(entry*, entry*, char*);
+void checkTypeUnaryOperatorExpression(entry*, char*);
+int isTypeValidForOperator(char*, char*);
+int strBelongsToStrArray( char*,  char ** , int );
 
 extern int yylineno;
 extern char * yytext;
@@ -58,49 +62,49 @@ Stack * scope_stack;
 %left AND 
 %left OR
 
-%type <ent> main, 
-            stmts,
-            stmt,
-            import_stmt,
-            record_stmt,
-            global_stmt,
-            record_block,
-            record_fields,
-            record_field,
-            func_def,
-            param,
-            params,
-            param_list,
-            type,
-            block,
-            declaration,
-            atrib,
-            expression,
-            literal,
-            access,
-            args,
-            func_call,
-            pre_comp_direct,
-            pre_comp_directs,
-            func_defs,
-            expressions,
-            exp_lv_8,
-            exp_lv_7,
-            exp_lv_6,
-            exp_lv_5,
-            exp_lv_4,
-            exp_lv_3,
-            exp_lv_2,
-            exp_lv_1,
-            if_stmt,
-            for_stmt,
-            for_part,
-            while_stmt,
-            do_while_stmt,
-            switch_stmt,
-            return_stmt,
-            break_stmt,
-            continue_stmt,
+%type <ent> main 
+            stmts
+            stmt
+            import_stmt
+            record_stmt
+            global_stmt
+            record_block
+            record_fields
+            record_field
+            func_def
+            param
+            params
+            param_list
+            type
+            block
+            declaration
+            atrib
+            expression
+            literal
+            access
+            args
+            func_call
+            pre_comp_direct
+            pre_comp_directs
+            func_defs
+            expressions
+            exp_lv_8
+            exp_lv_7
+            exp_lv_6
+            exp_lv_5
+            exp_lv_4
+            exp_lv_3
+            exp_lv_2
+            exp_lv_1
+            if_stmt
+            for_stmt
+            for_part
+            while_stmt
+            do_while_stmt
+            switch_stmt
+            return_stmt
+            break_stmt
+            continue_stmt
             throw_stmt
 
 %start file
@@ -474,6 +478,7 @@ exp_lv_5        : NULLTK {
                 }
                 | exp_lv_5 PLUS exp_lv_4 {
                     char * s = cat(3, $1->code, " + ", $3->code);
+                    checkTypeBinaryOperatorExpression($1,$3, "+");
                     free_entry($1);
                     free_entry($3);
                     $$ = create_entry(s, "");
@@ -488,9 +493,11 @@ exp_lv_5        : NULLTK {
                 }
                 | exp_lv_4 {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
@@ -517,6 +524,7 @@ exp_lv_4        : exp_lv_4 TIMES exp_lv_3 {
                 }
                 | exp_lv_4 MOD exp_lv_3 {
                     char * s = cat(3, $1->code, " % ", $3->code);
+                    checkTypeBinaryOperatorExpression($1,$3, "%");
                     free_entry($1);
                     free_entry($3);
                     $$ = create_entry(s, "");
@@ -524,9 +532,11 @@ exp_lv_4        : exp_lv_4 TIMES exp_lv_3 {
                 }
                 | exp_lv_3 {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
@@ -543,9 +553,11 @@ exp_lv_3        : exp_lv_3 POWER exp_lv_2 {
                 }
                 | exp_lv_2 {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
@@ -575,17 +587,21 @@ exp_lv_2        : DOLLAR exp_lv_1 {
                 }
                 | exp_lv_1 {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
 exp_lv_1        : literal {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 | ID {
                     char * s = cat(1, $1);
@@ -1097,4 +1113,51 @@ void generateRandomId(char *str, int size) {
         str[i] = charset[key];
     }
     str[size - 1] = '\0';
+}
+
+void checkTypeBinaryOperatorExpression(entry *firstOperand, entry *secondOperand, char * operator){
+    printf("first operand: code[%s] type[%s]\n", firstOperand->code, firstOperand->type);
+    printf("second operand: code[%s] type[%s]\n", secondOperand->code, secondOperand->type);
+    if(strcmp(firstOperand->type,secondOperand->type)){
+        yyerror(cat(5,"invalid operands, ", firstOperand->type, " and ", secondOperand->type, " are not compatible"));
+    }
+    if(!isTypeValidForOperator(firstOperand->type, operator)){
+        yyerror(cat(4,"operator \"", operator,"\" does not suport support operand of type: ", firstOperand->type ));
+    }
+}
+
+void checkTypeUnaryOperatorExpression(entry *firstOperand, char* operator){
+    printf("first operand: code[%s] type[%s]\n", firstOperand->code, firstOperand->type);
+}
+
+int isTypeValidForOperator(char* type, char* operator){
+    char *intValidOperands[] = { "+", "-", "/", "*","%", "==","!=",">","<",">=","<=" };
+    int isValidForInt = (strcmp(type, "INTEGER") == 0) && strBelongsToStrArray(operator,intValidOperands , sizeof(intValidOperands)/sizeof(intValidOperands[0]));
+    char *decimalValidOperands[] = { "+", "-", "/", "*", "==","!=",">","<",">=","<=" };
+    int isValidForDecimal = (strcmp(type, "DECIMAL") == 0) && strBelongsToStrArray(operator,decimalValidOperands , sizeof(decimalValidOperands)/sizeof(decimalValidOperands[0]));
+    char *boolValidOperands[] = {"==","!=",">","<",">=","<="};
+    int isValidForBool = (strcmp(type, "BOOLEAN") == 0) && strBelongsToStrArray(operator,boolValidOperands, sizeof(boolValidOperands)/sizeof(boolValidOperands[0]));
+    if(isValidForInt){
+        return 1;
+    }
+    else if(isValidForDecimal){
+        return 1;
+    }
+    else if(isValidForBool){
+        return 1;
+    }
+    else{
+        return 0;
+    }
+}
+
+int strBelongsToStrArray( char* str, char *array[], int strArrayLength){
+    printf("tamanho do array: %d\n", strArrayLength);
+    for(int i=0; i<strArrayLength; i++){
+        if(strcmp(str, array[i]) == 0){
+            printf("achou %s é igual a %s\n", str, array[i]);
+            return 1;
+        }
+    }
+    return 0;
 }
