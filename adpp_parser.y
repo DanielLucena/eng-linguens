@@ -27,6 +27,7 @@ extern char * yytext;
 extern FILE * yyin, * yyout;
 HashTable * type_table;
 Stack * scope_stack;
+
 %}
 
 %union {
@@ -1157,9 +1158,17 @@ entry* getEntryForExpression(entry *firstOperand, entry *secondOperand, char * o
 }
 
 char* convertToStirng(entry *operand){
+    const char* string_conversion_lib = "#define BUF_SZ 50\nstatic char buf[BUF_SZ];\nconst char *d_to_s(double v){snprintf(buf, BUF_SZ, \"%f\", v);return buf;}\nconst char *b_to_s(int v){return v ? \"true\" : \"false\";}\nconst char *i_to_s(long v){snprintf(buf, BUF_SZ, \"%ld\", v);return buf;}\nconst char *c_to_s(char v){snprintf(buf, BUF_SZ, \"%c\", v);return buf;}";
+    if(!exists_on_table(type_table, string_conversion_lib)){
+        add_to_table(type_table, string_conversion_lib, "#IMPORT");
+    }
     char* s;
-    if((strcmp(operand->type, "INTEGER") == 0) || (strcmp(operand->type, "DECIMAL") == 0)){
-        s = cat(3, "\"", operand->code, "\"");
+    if(strcmp(operand->type, "INTEGER") == 0){
+
+        s = cat(3, "i_to_s(", operand->code, ")");
+    }
+    else if(strcmp(operand->type, "DECIMAL") == 0){
+        s = cat(3, "d_to_s(", operand->code, ")");
     }
     else if(strcmp(operand->type, "CARACTERE") == 0){
         s = operand->code;
