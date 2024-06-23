@@ -21,6 +21,9 @@ test: clean build
 	@echo "TEST 1\n"
 	./ADPP tests/type_checking.adpp
 
+	@echo "COMPILING TARGET TO C\n"
+	gcc tests/type_checking.output.c -o tests/type_checking.output
+
 compile_problems: clean build
 	@echo "COMPILING EXAMPLE PROBLEMS\n"
 

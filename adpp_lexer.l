@@ -105,7 +105,7 @@
 [0-9]+                {yylval.sValue = strdup(yytext); 
                        return INTEGER;}
 
-(\"\")|(\".*?[^\\]\") {yylval.sValue = strdup(yytext); 
+\"(?:[^"\\]|\\.)*\"   {yylval.sValue = strdup(yytext); 
                        return STRING;}
 
 (<.*?[^\\]>)          {yylval.sValue = strdup(yytext); 

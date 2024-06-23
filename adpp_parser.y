@@ -15,10 +15,12 @@ char *cat(int, ...);
 void populateTypeTablePrimitives();
 void insert_imports(const char*, const char*);
 void generateRandomId(char *, int);
-void checkTypeBinaryOperatorExpression(entry*, entry*, char*);
-void checkTypeUnaryOperatorExpression(entry*, char*);
+void checkTypeBinaryExpression(entry*, entry*, char*);
+void checkTypeUnaryExpression(entry*, char*);
 int isTypeValidForOperator(char*, char*);
 int strBelongsToStrArray( char*,  char ** , int );
+entry* getEntryForExpression(entry*, entry*, char*);
+char* convertToStirng(entry*);
 
 extern int yylineno;
 extern char * yytext;
@@ -385,9 +387,11 @@ expression      : expression '?' expression ':' expression {
                 }
                 | exp_lv_8 {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
@@ -400,9 +404,11 @@ exp_lv_8        : exp_lv_8 OR exp_lv_7 {
                 }
                 | exp_lv_7 {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
@@ -415,9 +421,11 @@ exp_lv_7        : exp_lv_7 AND exp_lv_6 {
                 }
                 | exp_lv_6 {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
@@ -450,11 +458,10 @@ exp_lv_6        : exp_lv_6 MORE_THAN exp_lv_5 {
                     free(s);
                 }
                 | exp_lv_6 COMPARISON exp_lv_5 {
-                    char * s = cat(3, $1->code, " == ", $3->code);
+                    entry * e = getEntryForExpression($1,$3, "==");
                     free_entry($1);
                     free_entry($3);
-                    $$ = create_entry(s, "BOOLEAN");
-                    free(s);
+                    $$ = e;     
                 }
                 | exp_lv_6 DIFFERENT exp_lv_5 {
                     char * s = cat(3, $1->code, " != ", $3->code);
@@ -465,9 +472,11 @@ exp_lv_6        : exp_lv_6 MORE_THAN exp_lv_5 {
                 }
                 | exp_lv_5 {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
@@ -477,12 +486,14 @@ exp_lv_5        : NULLTK {
                     free(s);
                 }
                 | exp_lv_5 PLUS exp_lv_4 {
-                    char * s = cat(3, $1->code, " + ", $3->code);
-                    checkTypeBinaryOperatorExpression($1,$3, "+");
+                    entry * e = getEntryForExpression($1,$3, "+");
+                    if((strcmp($1->type, "STRING") == 0) 
+                    && !exists_on_table(type_table, "#include <string.h>")){
+                        add_to_table(type_table, "#include <string.h>", "#IMPORT");
+                    }
                     free_entry($1);
                     free_entry($3);
-                    $$ = create_entry(s, "");
-                    free(s);
+                    $$ = e;
                 }
                 | exp_lv_5 MINUS exp_lv_4 {
                     char * s = cat(3, $1->code, " - ", $3->code);
@@ -523,12 +534,10 @@ exp_lv_4        : exp_lv_4 TIMES exp_lv_3 {
                     free(s);
                 }
                 | exp_lv_4 MOD exp_lv_3 {
-                    char * s = cat(3, $1->code, " % ", $3->code);
-                    checkTypeBinaryOperatorExpression($1,$3, "%");
+                    entry * e = getEntryForExpression($1,$3, "%");
                     free_entry($1);
                     free_entry($3);
-                    $$ = create_entry(s, "");
-                    free(s);
+                    $$ = e;
                 }
                 | exp_lv_3 {
                     char * s = cat(1, $1->code);
@@ -686,7 +695,7 @@ literal         : INTEGER {
                 }
                 | STRING {
                     char * s = cat(1, $1);
-                    //free($1); Por algum motivo tá dando errado
+                    free($1); //expressão regular de string modificada, por enquanto sem erro
                     $$ = create_entry(s, "STRING");
                     free(s);
                 }
@@ -1115,9 +1124,60 @@ void generateRandomId(char *str, int size) {
     str[size - 1] = '\0';
 }
 
-void checkTypeBinaryOperatorExpression(entry *firstOperand, entry *secondOperand, char * operator){
-    printf("first operand: code[%s] type[%s]\n", firstOperand->code, firstOperand->type);
-    printf("second operand: code[%s] type[%s]\n", secondOperand->code, secondOperand->type);
+entry* getEntryForExpression(entry *firstOperand, entry *secondOperand, char * operator){
+    printf("Generating expression for:[%s, %s, %s]\n",
+     firstOperand->code,secondOperand->code,operator);
+    
+    char* s;
+    if(secondOperand == NULL){
+        checkTypeUnaryExpression(firstOperand, operator);
+        s = cat(2, firstOperand->code, operator);
+        printf("\tExpression: %s\n\tExprType: %s\n",s,firstOperand->type);
+        return create_entry(s, firstOperand->type);
+    }
+    else{
+        if((strcmp(firstOperand->type, "STRING") == 0)){
+            if((strcmp(operator, "+") == 0) && (strcmp(secondOperand->type, "STRING") != 0)){
+                s = cat(5, "strcat(",firstOperand->code,", ", convertToStirng(secondOperand),")");
+            }
+            else{
+                s = cat(5, "strcat(",firstOperand->code, ", ",secondOperand->code,")");
+            }
+            printf("\tExpression: %s\n\tExprType: %s\n",s,"STRING");
+            return create_entry(s, "STRING");
+        }
+        else{
+            checkTypeBinaryExpression(firstOperand, secondOperand, operator);
+            s = cat(3, firstOperand->code, operator, secondOperand->code);
+            printf("\tExpression: %s\n\tExprType: %s\n",s,firstOperand->type);
+            return create_entry(s, firstOperand->type);
+        }
+
+    } 
+}
+
+char* convertToStirng(entry *operand){
+    char* s;
+    if((strcmp(operand->type, "INTEGER") == 0) || (strcmp(operand->type, "DECIMAL") == 0)){
+        s = cat(3, "\"", operand->code, "\"");
+    }
+    else if(strcmp(operand->type, "CARACTERE") == 0){
+        s = operand->code;
+        s[0] = s[2] = '\"';
+    }
+    else if(strcmp(operand->type, "BOOLEAN") == 0){
+        if(strcmp(operand->code, "1") == 0){ 
+            s = "\"true\"";
+        }
+        else{
+            s = "\"false\"";
+        }
+    }
+    return s;
+}
+void checkTypeBinaryExpression(entry *firstOperand, entry *secondOperand, char * operator){
+    //printf("first operand: code[%s] type[%s]\n", firstOperand->code, firstOperand->type);
+    //printf("second operand: code[%s] type[%s]\n", secondOperand->code, secondOperand->type);
     if(strcmp(firstOperand->type,secondOperand->type)){
         yyerror(cat(5,"invalid operands, ", firstOperand->type, " and ", secondOperand->type, " are not compatible"));
     }
@@ -1126,17 +1186,29 @@ void checkTypeBinaryOperatorExpression(entry *firstOperand, entry *secondOperand
     }
 }
 
-void checkTypeUnaryOperatorExpression(entry *firstOperand, char* operator){
-    printf("first operand: code[%s] type[%s]\n", firstOperand->code, firstOperand->type);
+void checkTypeUnaryExpression(entry *firstOperand, char* operator){
+    //printf("unique operand: code[%s] type[%s]\n", firstOperand->code, firstOperand->type);
+    if(!isTypeValidForOperator(firstOperand->type, operator)){
+        yyerror(cat(4,"operator \"", operator,"\" does not suport support operand of type: ", firstOperand->type ));
+    }
 }
 
 int isTypeValidForOperator(char* type, char* operator){
-    char *intValidOperands[] = { "+", "-", "/", "*","%", "==","!=",">","<",">=","<=" };
+    char *intValidOperands[] = { "+", "-", "/", "*","%", "==","!=",">","<",">=","<=","++","--" };
     int isValidForInt = (strcmp(type, "INTEGER") == 0) && strBelongsToStrArray(operator,intValidOperands , sizeof(intValidOperands)/sizeof(intValidOperands[0]));
-    char *decimalValidOperands[] = { "+", "-", "/", "*", "==","!=",">","<",">=","<=" };
+
+    char *decimalValidOperands[] = { "+", "-", "/", "*", "^", "==","!=",">","<",">=","<=" };
     int isValidForDecimal = (strcmp(type, "DECIMAL") == 0) && strBelongsToStrArray(operator,decimalValidOperands , sizeof(decimalValidOperands)/sizeof(decimalValidOperands[0]));
-    char *boolValidOperands[] = {"==","!=",">","<",">=","<="};
+
+    char *boolValidOperands[] = {"==","!=",">","<",">=","<=", "&&", "||"};
     int isValidForBool = (strcmp(type, "BOOLEAN") == 0) && strBelongsToStrArray(operator,boolValidOperands, sizeof(boolValidOperands)/sizeof(boolValidOperands[0]));
+
+    char *charValidOperands[] = {"+", "-", "/", "*","%", "==","!=",">","<",">=","<="};
+    int isValidForChar = (strcmp(type, "CARACTERE") == 0) && strBelongsToStrArray(operator,charValidOperands, sizeof(charValidOperands)/sizeof(charValidOperands[0]));
+
+    char *stringValidOperands[] = {"+", "==", "!="};
+    int isValidForString = (strcmp(type, "STRING") == 0) && strBelongsToStrArray(operator,stringValidOperands, sizeof(stringValidOperands)/sizeof(stringValidOperands[0]));
+
     if(isValidForInt){
         return 1;
     }
@@ -1146,16 +1218,22 @@ int isTypeValidForOperator(char* type, char* operator){
     else if(isValidForBool){
         return 1;
     }
+    else if(isValidForChar){
+        return 1;
+    }
+    else if(isValidForString){
+        return 1;
+    }
     else{
         return 0;
     }
 }
 
 int strBelongsToStrArray( char* str, char *array[], int strArrayLength){
-    printf("tamanho do array: %d\n", strArrayLength);
+    //printf("tamanho do array: %d\n", strArrayLength);
     for(int i=0; i<strArrayLength; i++){
         if(strcmp(str, array[i]) == 0){
-            printf("achou %s é igual a %s\n", str, array[i]);
+            //printf("achou %s é igual a %s\n", str, array[i]);
             return 1;
         }
     }
