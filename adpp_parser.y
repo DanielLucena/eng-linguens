@@ -863,11 +863,15 @@ atrib           : ID '=' expression {
 
 if_stmt         : IF {push_on_stack_id("@if@");} '(' expression ')' block {pop_from_stack(scope_stack);} else_stmt {
                     char * s;
-                    if(strcmp($8->code,"") == 0){
-                        s = cat(4, "if(", $4->code, ") ", $6->code);
+                    if(strcmp($8->type,"ELSEIF") == 0){
+                        s = cat(9, "if(", $4->code, ") ", $6->code, "\nif(!(", $4->code, ")){", $8->code, "}");
+                    }
+                    else if(strcmp($8->type,"ELSE") == 0){
+                        s = cat(8, "if(", $4->code, ") ", $6->code, "\nif(!(", $4->code, "))", $8->code);
                     }
                     else{
-                        s = cat(9, "if(", $4->code, ") ", $6->code, "\nif(!(", $4->code, ")){", $8->code, "}");
+                        s = cat(4, "if(", $4->code, ") ", $6->code);
+                        
                     }
                      
                     free_entry($4);
@@ -882,18 +886,31 @@ else_stmt       : {$$ = create_entry("","");}
                 | ELSE {push_on_stack_id("@else@");} block {pop_from_stack(scope_stack);} {
                     char * s = cat(1, $3->code );
                     free_entry($3);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, "ELSE");
                     free(s);
                 }
                 | ELSE IF {push_on_stack_id("@if@");} '(' expression ')' block {pop_from_stack(scope_stack);} else_stmt {
 
 
                     char * s;
-                    if(strcmp($9->code,"") == 0){
-                        s = cat(4, "if(", $5->code, ") ", $7->code);
+                    // if(strcmp($9->code,"") == 0){
+                    //     printf("elseif sem else\n");
+                    //     s = cat(4, "if(", $5->code, ") ", $7->code);
+                    // }
+                    // else{
+                    //     printf("elseif com else\n");
+                    //     s = cat(9, "if(", $5->code, ") ", $7->code, "\nif(!(", $5->code, ")){", $9->code, "}");
+                    // }
+
+                    if(strcmp($9->type,"ELSEIF") == 0){
+                        s = cat(9, "if(", $5->code, ") ", $7->code, "\nif(!(", $5->code, ")){", $9->code, "}");
+                    }
+                    else if(strcmp($9->type,"ELSE") == 0){
+                        s = cat(8, "if(", $5->code, ") ", $7->code, "\nif(!(", $5->code, "))", $9->code);
                     }
                     else{
-                        s = cat(9, "if(", $5->code, ") ", $7->code, "\nif(!(", $5->code, ")){", $9->code, "}");
+                        s = cat(4, "if(", $5->code, ") ", $7->code);
+                        
                     }
                      
                     free_entry($5);

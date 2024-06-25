@@ -5,15 +5,14 @@ global int v = 0;
 
 func test(int x): void {
     if(x) {
-
+        int j;
     } else if(w){
-
-    } else if(z) {
-
-    } else if(v) {
-
-    } else {
-
+        int j;
+    } else if(z){
+        int j;
+    } 
+    else {
+        j;
     }
 }
 
