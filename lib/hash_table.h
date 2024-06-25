@@ -24,6 +24,6 @@ bool remove_from_table(HashTable* table, const char* key);
 bool exists_on_table(HashTable* table, const char* key);
 char* get_value_from_table(HashTable* table, const char* key);
 void iterate_table(HashTable* table, void (*callback)(const char* key, const char* value));
-bool check_scope(HashTable* table, const char* key);
+bool check_scope(HashTable* table, const char* key, char** found_key);
 
 #endif // HASH_TABLE_H

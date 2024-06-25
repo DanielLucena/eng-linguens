@@ -14,22 +14,18 @@ const char *c_to_s(char v){snprintf(buf, BUF_SZ, "%c", v);return buf;}
 int main() {
 1+2;
 1.2+3.4;
-1.2+2;
-1+3.4;
 1%2;
 1==1;
 0==0;
 1==0;
 0==1;
-1==1;
-0==3.4;
-printf(strcat("Hello", "world"));
-printf(strcat("Hello", i_to_s(1)));
 strcat("Hello", d_to_s(1.2));
 strcat("Hello", "true");
 strcat("Hello", "false");
 strcat("Hello", "W");
 strcat(strcat("Hello", "world"), "world");
+long B = 2;
+B;
 
 return 0;
 }

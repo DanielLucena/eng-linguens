@@ -20,10 +20,10 @@ test: clean build
 
 	@echo "TEST 1\n"
 
-	./ADPP tests/type_checking.adpp
+	./ADPP tests/simple.adpp
 
 	@echo "COMPILING TARGET TO C\n"
-	gcc tests/type_checking.output.c -o tests/type_checking.output
+	gcc tests/simple.output.c -o tests/simple
 
 
 compile_problems: clean build

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "hash_table.h"
 
 unsigned int hash(const char* key, int capacity) {
@@ -124,7 +125,6 @@ bool exists_on_table(HashTable* table, const char* key) {
 char* get_value_from_table(HashTable* table, const char* key) {
     unsigned int index = hash(key, table->capacity);
     Node* node = table->buckets[index];
-
     while (node) {
         if (strcmp(node->key, key) == 0) {
             return strdup(node->value);
@@ -144,8 +144,10 @@ void iterate_table(HashTable* table, void (*callback)(const char* key, const cha
     }
 }
 
-bool check_scope_recursive(HashTable* table, const char* key) {
+// Função auxiliar para buscar a chave
+bool check_scope_recursive(HashTable* table, const char* key, char** found_key) {
     if (exists_on_table(table, key)) {
+        *found_key = strdup(key);
         return true;
     }
 
@@ -156,7 +158,7 @@ bool check_scope_recursive(HashTable* table, const char* key) {
         strncpy(higher_level_key, key, length);
         higher_level_key[length] = '\0';
 
-        bool result = check_scope_recursive(table, higher_level_key);
+        bool result = check_scope_recursive(table, higher_level_key, found_key);
         free(higher_level_key);
         return result;
     }
@@ -164,6 +166,7 @@ bool check_scope_recursive(HashTable* table, const char* key) {
     return false;
 }
 
-bool check_scope(HashTable* table, const char* key) {
-    return check_scope_recursive(table, key);
+// Função principal para buscar a chave e retornar a chave encontrada
+bool check_scope(HashTable* table, const char* key, char** found_key) {
+    return check_scope_recursive(table, key, found_key);
 }

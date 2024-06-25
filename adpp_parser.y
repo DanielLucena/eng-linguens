@@ -14,7 +14,7 @@ int yyerror(char *s);
 char *cat(int, ...);
 void populateTypeTablePrimitives();
 void insert_imports(const char*, const char*);
-void generateRandomId(char *, int);
+char * generateId();
 
 void checkTypeBinaryExpression(entry*, entry*, char*);
 void checkTypeUnaryExpression(entry*, char*);
@@ -33,7 +33,7 @@ extern FILE * yyin, * yyout;
 HashTable * type_table;
 Stack * scope_stack;
 int Errors = 0;
-
+int scopeId = 1;
 %}
 
 %union {
@@ -124,7 +124,7 @@ file            : {push_on_stack(scope_stack, "ADPP");} pre_comp_directs func_de
                         Errors > 1  
                             ? printf("Unable to compile the program, %d errors found\n", Errors)
                             : printf("Unable to compile the program, 1 error found\n");
-                        exit(0);
+                        exit(1);
                     }
                     fprintf(yyout, "#include <stdio.h>\n");
                     fprintf(yyout, "#include <stdlib.h>\n");
@@ -360,7 +360,7 @@ param_list      : param {
 
 param           : type ID {
 
-                    char * variable = cat(3, $2, "##", concat_stack_with_delimiter(scope_stack, "##"));
+                    char * variable = cat(3, $2, "#", concat_stack_with_delimiter(scope_stack, "#"));
                     add_to_table(type_table, variable, $1->code);
 
                     char * s = cat(3, $1->code, " ", $2);
@@ -548,7 +548,7 @@ exp_lv_4        : exp_lv_4 TIMES exp_lv_3 {
                     free(s);
                 }
                 | exp_lv_4 MOD exp_lv_3 {
-                    entry * e = getEntryForExpression($1,$3, "%");
+                    entry * e = getEntryForExpression($1, $3, "%");
                     free_entry($1);
                     free_entry($3);
                     $$ = e;
@@ -628,17 +628,19 @@ exp_lv_1        : literal {
                 }
                 | ID {
                     char * s = cat(1, $1);
-                    char * variable = cat(3, $1, "##", concat_stack_with_delimiter(scope_stack, "##"));
+                    char * variable = cat(3, $1, "#", concat_stack_with_delimiter(scope_stack, "#"));
                     char * t;
-                    if(!exists_on_table(type_table, variable)){
+                    char* found_key = NULL;
+                    
+                    bool exists = check_scope(type_table, variable, &found_key);
+
+                    if(!exists){
                         yyerror(cat(3, "Variable ", $1, " is not declared on scope."));
                         t = cat(1, "null");
                     }
                     else{
-                        t = cat(1, get_value_from_table(type_table,variable));
+                        t = cat(1, get_value_from_table(type_table, found_key));
                     }
-                    
-                    //printf("variable founded: %s of type: %s\n",variable,t);
                     free(variable);
                     free($1);
                     $$ = create_entry(s, t);
@@ -781,7 +783,7 @@ expressions     : expression {
 
 declaration     : type ID '=' expression {
                     char * s = cat(5, $1->code," ", $2, " = ", $4->code);
-                    char * variable = cat(3, $2, "##", concat_stack_with_delimiter(scope_stack, "##"));
+                    char * variable = cat(3, $2, "#", concat_stack_with_delimiter(scope_stack, "#"));
                     if(exists_on_table(type_table, variable)) {                    
                         yyerror(cat(3, "Variable ", $2, " already declared on scope."));
                     }
@@ -789,8 +791,6 @@ declaration     : type ID '=' expression {
                         yyerror(cat(4,"invalid attribution, variable of type ", $1->type, " can't recieve a value of type ", $4->type));
                     }
                     else{
-                        // printf("internal Type: %s\n",$1->type);
-                        // printf("internal Variable: %s\n",variable);
                         add_to_table(type_table, variable, $1->type);
                     }
                     
@@ -803,7 +803,7 @@ declaration     : type ID '=' expression {
                 }
                 | type ID {
                     
-                    char * variable = cat(3, $2, "##", concat_stack_with_delimiter(scope_stack, "##"));
+                    char * variable = cat(3, $2, "#", concat_stack_with_delimiter(scope_stack, "#"));
                     
                     if(exists_on_table(type_table, variable)) {
                         free(variable);
@@ -868,7 +868,7 @@ if_stmt         : IF '(' expression ')' block  {
                     free(s);
                 }
                 | IF '(' expression ')' block ELSE block {
-                    char * s = cat(6, "if(", $3->code, ") ", $5->code, " else ", $7->code);
+                    char * s = cat(8, "if(", $3->code, ") ", $5->code, "\nif(!(", $3->code, "))", $7->code);
                     free_entry($3);
                     free_entry($5);
                     free_entry($7);
@@ -876,7 +876,7 @@ if_stmt         : IF '(' expression ')' block  {
                     free(s);
                 }
                 | IF '(' expression ')' block ELSE if_stmt {
-                    char * s = cat(6, "if(", $3->code, ") ", $5->code, " else ", $7->code);
+                    char * s = cat(9, "if(", $3->code, ") ", $5->code, "\nif(!(", $3->code, ")){\n", $7->code, "\n}");
                     free_entry($3);
                     free_entry($5);
                     free_entry($7);
@@ -884,19 +884,17 @@ if_stmt         : IF '(' expression ')' block  {
                     free(s);
                 }
                 ;
+// {push_on_stack_id("@while@");} block {pop_from_stack(scope_stack);}
+for_stmt        : FOR {push_on_stack_id("@for@");}  '(' for_part ';' expression ';' for_part ')' block {pop_from_stack(scope_stack);} {
+                    char * startGoto = generateId();
 
-for_stmt        : FOR  '(' for_part ';' expression ';' for_part ')' block {
-                    char * startGoto = malloc(sizeof(char)*21);
-                    generateRandomId(startGoto, 21);
+                    char * endGoto = generateId();
 
-                    char * endGoto = malloc(sizeof(char)*21);
-                    generateRandomId(endGoto, 21);
-
-                    char * s = cat(18, "{", $3->code, ";\n", startGoto, ":\n", "if(!(", $5->code, ")) goto ", endGoto, ";\n", $9->code, "\n", $7->code, ";\ngoto ", startGoto, ";\n", endGoto, ":\n}"); 
-                    free_entry($3);
-                    free_entry($5);
-                    free_entry($7);
-                    free_entry($9);
+                    char * s = cat(18, "{", $4->code, ";\n", startGoto, ":\n", "if(!(", $6->code, ")) goto ", endGoto, ";\n", $10->code, "\n", $8->code, ";\ngoto ", startGoto, ";\n", endGoto, ":\n}"); 
+                    free_entry($4);
+                    free_entry($6);
+                    free_entry($8);
+                    free_entry($10);
 
                     free(startGoto);
                     free(endGoto);
@@ -921,11 +919,9 @@ for_part        : atrib {
                 ;
 
 while_stmt      : WHILE '(' expression ')' {push_on_stack_id("@while@");} block {pop_from_stack(scope_stack);} {
-                    char * startGoto = malloc(sizeof(char)*21);
-                    generateRandomId(startGoto, 21);
+                    char * startGoto = generateId();
 
-                    char * endGoto = malloc(sizeof(char)*21);
-                    generateRandomId(endGoto, 21);
+                    char * endGoto = generateId();
 
                     char * s = cat(13, startGoto, ":\n", "if(!(", $3->code, ")) goto ", endGoto, ";\n", $6->code, "\ngoto ", startGoto, ";\n", endGoto, ":\n");
 
@@ -939,14 +935,13 @@ while_stmt      : WHILE '(' expression ')' {push_on_stack_id("@while@");} block 
                 }
                 ;
 
-do_while_stmt   : DO block WHILE '(' expression ')' ';' {
-                    char * startGoto = malloc(sizeof(char) * 21);
-                    generateRandomId(startGoto, 21);
+do_while_stmt   : DO {push_on_stack_id("@dowhile@");} block {pop_from_stack(scope_stack);} WHILE '(' expression ')' ';' {
+                    char * startGoto = generateId();
 
-                    char * s = cat(8, startGoto, ":\n", $2->code, "\nif(", $5->code, ") goto ", startGoto, ";\n");
+                    char * s = cat(8, startGoto, ":\n", $3->code, "\nif(", $7->code, ") goto ", startGoto, ";\n");
 
-                    free_entry($2);
-                    free_entry($5);
+                    free_entry($3);
+                    free_entry($7);
 
                     free(startGoto);
                     $$ = create_entry(s, "");
@@ -1176,20 +1171,17 @@ void populateTypeTablePrimitives() {
 }
 
 void push_on_stack_id(char * prefix) {
-    char * str = malloc(sizeof(char)*10);
-    generateRandomId(str, 10);
+    char * str = generateId();
     push_on_stack(scope_stack, cat(2, prefix, str));
     free(str);
 }
 
-void generateRandomId(char *str, int size) {
-    const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    int i;
-    for (i = 0; i < size - 1; i++) {
-        int key = rand() % (sizeof(charset) - 1);
-        str[i] = charset[key];
-    }
-    str[size - 1] = '\0';
+char * generateId() {
+    char * string = malloc(sizeof(char) * 14);
+    sprintf(string, "ID%d", scopeId);
+    scopeId++;
+    string[13] = '\0';
+    return string;
 }
 
 entry* getEntryForExpression(entry *firstOperand, entry *secondOperand, char * operator){
@@ -1316,7 +1308,7 @@ int strBelongsToStrArray( char* str, char *array[], int strArrayLength){
 }
 
 void checkAtrib(char* id, entry* expr){
-    char * variable = cat(3, id, "##", concat_stack_with_delimiter(scope_stack, "##"));
+    char * variable = cat(3, id, "#", concat_stack_with_delimiter(scope_stack, "#"));
     //printf("variable %s atrib with %s\n", variable, expr->code);
     if(exists_on_table(type_table, variable)) {
         if(strcmp(expr->type, get_value_from_table(type_table,variable)) != 0){

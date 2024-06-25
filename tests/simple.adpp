@@ -1,10 +1,14 @@
-global int x;
+global int x = 0;
+global int z = 0;
+global int w = 0;
+global int v = 0;
 
 func test(int x): void {
-    do {
-        x++;
-    } while(x < 5);
+    if(x) {
+
+    }
 }
 
 program progress {
+    
 }
