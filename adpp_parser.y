@@ -59,7 +59,7 @@ int scopeId = 1;
 %token AND OR PIPE AMPERSAND DOLLAR
 %token ARRAY RECORD IMPORT GLOBAL
 
-%token IF ELSE FOR RETURN SWITCH CASE DEFAULT BREAK CONTINUE DO WHILE TRY CATCH FINALLY THROW 
+%token IF ELSE FOR RETURN SWITCH CASE DEFAULT BREAK CONTINUE DO WHILE INPUT OUTPUT
 
 %right INCREMENT DECREMENT
 %right DOLLAR AMPERSAND
@@ -117,6 +117,7 @@ int scopeId = 1;
             return_stmt
             break_stmt
             continue_stmt
+            input_stmt
 
 %start file
 
@@ -254,6 +255,12 @@ stmt            : ';' {$$ = create_entry(";","");}
                 }
                 | declaration ';' {
                     char * s = cat(2, $1->code, ";\n");
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | input_stmt ';' {
+                    char * s = cat(2, $1->code, "\n");
                     free_entry($1);
                     $$ = create_entry(s, "");
                     free(s);
@@ -753,7 +760,64 @@ compound_members: compound_member
 
 compound_member : expression ':' expression
 
+input_stmt      : INPUT '(' PRIMITIVE ',' ID ')' {
+                    
+                    char * variable = cat(3, $5, "#", concat_stack_with_delimiter(scope_stack, "#"));
+                    char* found_key = NULL;
+                    bool exists = check_scope(type_table, variable, &found_key);
+                    char * type;
+
+                    if(!exists){
+                        yyerror(cat(3, "Variable ", $5, " is not declared on scope."));
+                        type = cat(1, "null");
+                    }
+                    else{
+                        type = cat(1, get_value_from_table(type_table, found_key));
+                    }
+
+                    char * s;
+                    printf("%s\n", getLiteralType($3));
+                    if (strcmp(getLiteralType($3), type) == 0) {
+                        if (strcmp(type, "STRING") == 0) {
+                            // eu sei que $5 é do tipo char *
+                            char *len = cat(2, "len", generateId());
+                            char *nread = cat(2, "nread", generateId());
+
+                            s = cat(19, "size_t ", len, "=0;ssize_t ", nread, ";", nread, "= getline(&", $5, ",&", len,",stdin);if (", $5, "[", nread, " - 1] == '\\n') {", $5, "[", nread, " - 1] = '\\0';}");
+
+                        } else if (strcmp(type, "INTEGER") == 0) {
+                            s = cat(3, "scanf(\"%ld\", &", $5, ");");
+                        } else if (strcmp(type, "DECIMAL") == 0) {
+                            s = cat(3, "scanf(\"%lf\", &", $5, ");");
+                        } else if (strcmp(type, "CARACTERE") == 0) {
+                            s = cat(3, "scanf(\"%c\", &", $5, ");");
+                        } else {
+                            yyerror(cat(3, "Unsupported type ", type, "."));
+                        }
+                    } else {
+                        yyerror(cat(5, "Incompatible types between ", getLiteralType($3), " and ", type, "."));
+                    }
+
+
+                    free(found_key);
+                    free(variable);
+                    free($3);
+                    free($5);
+                    
+                    $$ = create_entry(s, type);
+                    
+                    free(s);
+                    free(type);
+                }
+                ;
+
 func_call       : ID '(' args ')' {
+                    
+                    if(strcmp($1, "input") == 0) {
+
+                    } else if(strcmp($1, "output")) {
+
+                    }
                     char * s = cat(4, $1, "(", $3->code, ")");
                     free($1);
                     free_entry($3);
@@ -897,14 +961,6 @@ else_stmt       : {$$ = create_entry("","");}
 
 
                     char * s;
-                    // if(strcmp($9->code,"") == 0){
-                    //     printf("elseif sem else\n");
-                    //     s = cat(4, "if(", $5->code, ") ", $7->code);
-                    // }
-                    // else{
-                    //     printf("elseif com else\n");
-                    //     s = cat(9, "if(", $5->code, ") ", $7->code, "\nif(!(", $5->code, ")){", $9->code, "}");
-                    // }
 
                     if(strcmp($9->type,"ELSEIF") == 0){
                         s = cat(9, "if(", $5->code, ") ", $7->code, "\nif(!(", $5->code, ")){", $9->code, "}");
@@ -925,7 +981,6 @@ else_stmt       : {$$ = create_entry("","");}
                 }
                 ;
 
-// {push_on_stack_id("@while@");} block {pop_from_stack(scope_stack);}
 for_stmt        : FOR {push_on_stack_id("@for@");}  '(' for_part ';' expression ';' for_part ')' block {pop_from_stack(scope_stack);} {
                     char * startGoto = generateId();
 

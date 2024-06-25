@@ -1,25 +1,14 @@
-global int x = 0;
-global int z = 0;
-global int w = 0;
-global int v = 0;
-
-func test(int x): void{
-
-}
-
-func test(int x): void {
-    if(x) {
-        int j;
-    } else if(w){
-        int j;
-    } else if(z){
-        int j;
-    } 
-    else {
-        
-    }
-}
-
 program progress {
-    
+    int x;
+    input(int, x);
+
+    decimal y;
+    input(decimal, y);
+
+    char z;
+    input(char, z);
+
+    string s;
+
+    input(string, x);
 }

@@ -28,12 +28,6 @@
 "do"                  {return(DO);}
 "while"               {return(WHILE);}
 
-"try"                 {return(TRY);}
-"catch"               {return(CATCH);}
-"finally"             {return(FINALLY);}
-"throw"               {return(THROW);}
-
-
 ";"                   return(yytext[0]);
 ":"                   return(yytext[0]);
 "=="                  {return(COMPARISON);}
@@ -96,6 +90,9 @@
 "new"                 {return(NEW);}
 "->"                  {return(PTRACCESS);}
 "NULL"                {return(NULLTK);}
+"input"               {return(INPUT);}
+"output"              {return(OUTPUT);}
+
 
 \/\/.*\n?             {yylineno++;}
 
