@@ -15,6 +15,8 @@ char *cat(int, ...);
 void populateTypeTablePrimitives();
 void insert_imports(const char*, const char*);
 void generateRandomId(char *, int);
+void printVariables(const char*, const char*);
+void push_on_stack_id(char*);
 
 extern int yylineno;
 extern char * yytext;
@@ -58,50 +60,49 @@ Stack * scope_stack;
 %left AND 
 %left OR
 
-%type <ent> main, 
-            stmts,
-            stmt,
-            import_stmt,
-            record_stmt,
-            global_stmt,
-            record_block,
-            record_fields,
-            record_field,
-            func_def,
-            param,
-            params,
-            param_list,
-            type,
-            block,
-            declaration,
-            atrib,
-            expression,
-            literal,
-            access,
-            args,
-            func_call,
-            pre_comp_direct,
-            pre_comp_directs,
-            func_defs,
-            expressions,
-            exp_lv_8,
-            exp_lv_7,
-            exp_lv_6,
-            exp_lv_5,
-            exp_lv_4,
-            exp_lv_3,
-            exp_lv_2,
-            exp_lv_1,
-            if_stmt,
-            for_stmt,
-            for_part,
-            while_stmt,
-            do_while_stmt,
-            switch_stmt,
-            return_stmt,
-            break_stmt,
-            continue_stmt,
-            throw_stmt
+%type <ent> main 
+            stmts
+            stmt
+            import_stmt
+            record_stmt
+            global_stmt
+            record_block
+            record_fields
+            record_field
+            func_def
+            param
+            params
+            param_list
+            type
+            block
+            declaration
+            atrib
+            expression
+            literal
+            access
+            args
+            func_call
+            pre_comp_direct
+            pre_comp_directs
+            func_defs
+            expressions
+            exp_lv_8
+            exp_lv_7
+            exp_lv_6
+            exp_lv_5
+            exp_lv_4
+            exp_lv_3
+            exp_lv_2
+            exp_lv_1
+            if_stmt
+            for_stmt
+            for_part
+            while_stmt
+            do_while_stmt
+            switch_stmt
+            return_stmt
+            break_stmt
+            continue_stmt
 
 %start file
 
@@ -148,12 +149,12 @@ pre_comp_direct : record_stmt {
                 ;
 
 main            : {$$ = create_entry("","");}
-                | PROGRAM ID '{' stmts '}' 
+                | PROGRAM ID {push_on_stack(scope_stack, "main");} '{' stmts '}' {pop_from_stack(scope_stack);}
                 {
                     add_to_table(type_table, "int main()", "#FUNCTION");
-                    char * s = cat(4, "int ", "main() {\n", $4->code, "\nreturn 0;\n}\n");
+                    char * s = cat(4, "int ", "main() {\n", $5->code, "\nreturn 0;\n}\n");
                     free($2);
-                    free_entry($4);
+                    free_entry($5);
                     $$ = create_entry(s, "");
                     free(s);
                 }
@@ -224,12 +225,6 @@ stmt            : ';' {$$ = create_entry(";","");}
                     $$ = create_entry(s, "");
                     free(s);
                 }
-                | throw_stmt ';' {
-                    char * s = cat(2, $1->code, ";\n");
-                    free_entry($1);
-                    $$ = create_entry(s, "");
-                    free(s);
-                }
                 | atrib ';' {
                     char * s = cat(2, $1->code, ";\n");
                     free_entry($1);
@@ -286,33 +281,36 @@ func_defs       : {$$ = create_entry("","");}
                 }
                 ;
 
-func_def        : SUBPROGRAM ID '(' params ')' ':' type block {
-                    char * funcProt = cat(6, $7->code, " ", $2, "(", $4->code, ")");
+func_def        : SUBPROGRAM ID {push_on_stack(scope_stack, $2);} '(' params ')' ':' type block {pop_from_stack(scope_stack);} {
+                    char * funcProt = cat(6, $8->code, " ", $2, "(", $5->code, ")");
 
                     if (strcmp("long main()", funcProt) == 0) {
                         yyerror("Function main is reservated by the compiller");
                         free(funcProt);
                         free($2);
-                        free_entry($7);
+                        free_entry($5);
                         free_entry($8);
+                        free_entry($9);
                         exit(1);
                     }
                     
                     if(exists_on_table(type_table, funcProt)) {
-                        yyerror(cat(3, "Function ", $2, " has arready bean declareted."));
+                        yyerror(cat(3, "Function ", $2, " has already bean declareted."));
                         free(funcProt);
                         free($2);
-                        free_entry($7);
+                        free_entry($5);
                         free_entry($8);
+                        free_entry($9);
                         exit(1);
                     }
 
                     add_to_table(type_table, funcProt, "#FUNCTION");
-                    char * s = cat(2, funcProt, $8->code);
+                    char * s = cat(2, funcProt, $9->code);
                     free(funcProt);
                     free($2);
-                    free_entry($7);
+                    free_entry($5);
                     free_entry($8);
+                    free_entry($9);
                     $$ = create_entry(s, "");
                     free(s);
                 }
@@ -343,6 +341,10 @@ param_list      : param {
                 ;
 
 param           : type ID {
+
+                    char * variable = cat(3, $2, "##", concat_stack_with_delimiter(scope_stack, "##"));
+                    add_to_table(type_table, variable, $1->code);
+
                     char * s = cat(3, $1->code, " ", $2);
                     free_entry($1);
                     free($2);
@@ -745,7 +747,6 @@ declaration     : type atrib {
                     
                     add_to_table(type_table, variable, $1->code);
 
-                    printf("%s\n", variable);
                     char * s = cat(3, $1->code, " ", $2);
                     free_entry($1);
                     free($2);
@@ -789,7 +790,7 @@ atrib           : ID '=' expression {
                 }
                 ;
 
-if_stmt         : IF '(' expression ')' block {
+if_stmt         : IF '(' expression ')' block  {
                     char * s = cat(4, "if(", $3->code, ") ", $5->code);
                     free_entry($3);
                     free_entry($5);
@@ -814,7 +815,7 @@ if_stmt         : IF '(' expression ')' block {
                 }
                 ;
 
-for_stmt        : FOR '(' for_part ';' expression ';' for_part ')' block {
+for_stmt        : FOR  '(' for_part ';' expression ';' for_part ')' block {
                     char * startGoto = malloc(sizeof(char)*21);
                     generateRandomId(startGoto, 21);
 
@@ -850,17 +851,17 @@ for_part        : atrib {
                 }
                 ;
 
-while_stmt      : WHILE '(' expression ')' block {
+while_stmt      : WHILE '(' expression ')' {push_on_stack_id("@while@");} block {pop_from_stack(scope_stack);} {
                     char * startGoto = malloc(sizeof(char)*21);
                     generateRandomId(startGoto, 21);
 
                     char * endGoto = malloc(sizeof(char)*21);
                     generateRandomId(endGoto, 21);
 
-                    char * s = cat(13, startGoto, ":\n", "if(!(", $3->code, ")) goto ", endGoto, ";\n", $5->code, "\ngoto ", startGoto, ";\n", endGoto, ":\n");
+                    char * s = cat(13, startGoto, ":\n", "if(!(", $3->code, ")) goto ", endGoto, ";\n", $6->code, "\ngoto ", startGoto, ";\n", endGoto, ":\n");
 
                     free_entry($3);
-                    free_entry($5);
+                    free_entry($6);
 
                     free(startGoto);
                     free(endGoto);
@@ -869,8 +870,21 @@ while_stmt      : WHILE '(' expression ')' block {
                 }
                 ;
 
-do_while_stmt   : DO block WHILE '(' expression ')' ';' ;
+do_while_stmt   : DO block WHILE '(' expression ')' ';' {
+                    char * startGoto = malloc(sizeof(char) * 21);
+                    generateRandomId(startGoto, 21);
 
+                    char * s = cat(8, startGoto, ":\n", $2->code, "\nif(", $5->code, ") goto ", startGoto, ";\n");
+
+                    free_entry($2);
+                    free_entry($5);
+
+                    free(startGoto);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
+                
 switch_stmt     : SWITCH '(' expression ')' '{' case_stmts '}' ;
 
 case_stmts      : /* vazio */
@@ -895,8 +909,6 @@ return_stmt     : RETURN {
 break_stmt      : BREAK ;
 
 continue_stmt   : CONTINUE ;
-
-throw_stmt      : THROW expression ;
 
 import_stmt     : IMPORT STRING ';' {
                     char * importText = cat(2, "#include ", $2);
@@ -1027,7 +1039,7 @@ int main (int argc, char ** argv) {
 
     status = yyparse();
 
-    printf("%s\n", concat_stack_with_delimiter(scope_stack, "##"));
+    iterate_table(type_table, printVariables);
 
     fclose(yyin);
     fclose(yyout);
@@ -1035,6 +1047,10 @@ int main (int argc, char ** argv) {
     free_table(type_table);
 
     return status;
+}
+
+void printVariables(const char* key, const char* value) {
+    printf("-> %s : %s \n", key, value);
 }
 
 void insert_imports(const char* key, const char* value) {
@@ -1087,6 +1103,13 @@ void populateTypeTablePrimitives() {
     add_to_table(type_table, "char", "char");
     add_to_table(type_table, "rec", "typedef struct");
     add_to_table(type_table, "void", "void");
+}
+
+void push_on_stack_id(char * prefix) {
+    char * str = malloc(sizeof(char)*10);
+    generateRandomId(str, 10);
+    push_on_stack(scope_stack, cat(2, prefix, str));
+    free(str);
 }
 
 void generateRandomId(char *str, int size) {

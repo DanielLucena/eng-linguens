@@ -20,6 +20,7 @@ test: clean build
 
 	@echo "TEST 1\n"
 	./ADPP tests/simple.adpp
+	gcc tests/simple.output.c -o tests/simple -lm
 
 compile_problems: clean build
 	@echo "COMPILING EXAMPLE PROBLEMS\n"
