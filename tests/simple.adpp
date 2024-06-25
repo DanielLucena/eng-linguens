@@ -1,14 +1,9 @@
+func test(int x) : void {
+    
+}
+
 program progress {
+    int z = 5;
     int x;
-    input(int, x);
-
-    decimal y;
-    input(decimal, y);
-
-    char z;
-    input(char, z);
-
-    string s;
-
-    input(string, x);
+    //test(x);
 }

@@ -1,4 +1,4 @@
-func leMatriz(array[array[int]] matriz, int linhas, int colunas): void {
+func leMatriz(int matriz[], int linhas, int colunas): void {
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
             printf("Elemento [%ld][%ld]: ", i, j);
@@ -53,22 +53,12 @@ func produtoMatrizes(array[array[int]] a, array[array[int]] b, int linhasA, int 
 }
 
 program prob3 {
-    int linhasA;
-    int colunasA;
+    printf("A primeira matriz contará com 3 colunas e 2 linhas");
 
-    printf("Digite o número de linhas da matriz A: ");
-    scanf("%ld", &linhasA);
-    printf("Digite o número de colunas da matriz A: ");
-    scanf("%ld", &colunasA);
-
-    array[array[int]] matrizA = new array[int][linhasA];
-
-    for(int i = 0; i < linhasA; i++) {
-        matrizA[i] = new int[colunasA];
-    }
+    int matrizA[2][3];
 
     printf("Digite os elementos da matriz A:\n");
-    leMatriz(matrizA, linhasA, colunasA);
+    leMatriz(matrizA);
 
     int linhasB;
     int colunasB;

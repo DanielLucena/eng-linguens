@@ -28,6 +28,7 @@ void checkAtrib(char*, entry*);
 char* getLiteralType(char*);
 void printVariables(const char*, const char*);
 void push_on_stack_id(char*);
+void remove_content_inside_brackets(char*);
 
 extern int yylineno;
 extern char * yytext;
@@ -118,6 +119,9 @@ int scopeId = 1;
             break_stmt
             continue_stmt
             input_stmt
+            output_stmt
+            dimention
+            dimentions
 
 %start file
 
@@ -133,6 +137,7 @@ file            : {push_on_stack(scope_stack, "ADPP");} pre_comp_directs func_de
                     fprintf(yyout, "#include <stdio.h>\n");
                     fprintf(yyout, "#include <stdlib.h>\n");
                     fprintf(yyout, "#include <limits.h>\n");
+                    fprintf(yyout, "void clearBuffer() {int c;start:c = getchar();if (c != '\\n' && c != EOF) {goto start;}}\n");
 
                     iterate_table(type_table, insert_imports);
                     
@@ -265,6 +270,12 @@ stmt            : ';' {$$ = create_entry(";","");}
                     $$ = create_entry(s, "");
                     free(s);
                 }
+                | output_stmt ';' {
+                    char * s = cat(2, $1->code, "\n");
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
                 ;
 
 type            : PRIMITIVE {
@@ -278,12 +289,6 @@ type            : PRIMITIVE {
                         free($1);
                         exit(1);
                     }
-                }
-                | ARRAY '[' type ']' {
-                    char * s = cat(2, $3->code, " *");
-                    free_entry($3);
-                    $$ = create_entry(s, s);
-                    free(s);
                 }
                 | type TIMES {
                     char * s = cat(2, $1->code, " *");
@@ -310,9 +315,11 @@ func_defs       : {$$ = create_entry("","");}
                 ;
 
 func_def        : SUBPROGRAM ID {push_on_stack(scope_stack, $2);} '(' params ')' ':' type block {pop_from_stack(scope_stack);} {
-                    char * funcProt = cat(6, $8->code, " ", $2, "(", $5->code, ")");
+                    char * funcDef = cat(6, $8->code, " ", $2, "(", $5->code, ")");
 
-                    if (strcmp("long main()", funcProt) == 0) {
+                    char * funcProt = cat(4, $2, "(", $5->type, ")");
+
+                    if (strcmp("main()", funcProt) == 0) {
                         yyerror("Function main is reservated by the compiller");
                         free(funcProt);
                         free($2);
@@ -333,8 +340,9 @@ func_def        : SUBPROGRAM ID {push_on_stack(scope_stack, $2);} '(' params ')'
                         exit(1);
                     }
 
-                    add_to_table(type_table, funcProt, "#FUNCTION");
-                    char * s = cat(2, funcProt, $9->code);
+                    add_to_table(type_table, funcProt, $8->code);
+                    char * s = cat(2, funcDef, $9->code);
+                    free(funcDef);
                     free(funcProt);
                     free($2);
                     free_entry($5);
@@ -348,20 +356,25 @@ func_def        : SUBPROGRAM ID {push_on_stack(scope_stack, $2);} '(' params ')'
 params          : {$$ = create_entry("","");}
                 | param_list {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
 param_list      : param {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 | param ',' param_list {
                     char * s = cat(3, $1->code, ", ", $3->code);
+                    char * t = cat(3, $1->type, ",", $3->type);
                     free_entry($1);
                     free_entry($3);
                     $$ = create_entry(s, "");
@@ -370,15 +383,35 @@ param_list      : param {
                 ;
 
 param           : type ID {
-
                     char * variable = cat(3, $2, "#", concat_stack_with_delimiter(scope_stack, "#"));
                     add_to_table(type_table, variable, $1->code);
 
                     char * s = cat(3, $1->code, " ", $2);
+                    $$ = create_entry(s, $1->code);
                     free_entry($1);
                     free($2);
-                    $$ = create_entry(s, "");
                     free(s);
+                    free(variable);
+                }
+                | type ID dimentions {
+                    char * variable = cat(3, $2, "#", concat_stack_with_delimiter(scope_stack, "#"));
+                    
+                    char * typeClean = strdup($3->code);
+
+                    remove_content_inside_brackets(typeClean);
+
+                    char * t = cat(2, $1->code, typeClean);
+                    add_to_table(type_table, variable, t);
+                    char * s = cat(5, $1->code, " ", $2, " ", $3->code);
+                    
+                    $$ = create_entry(s, t);
+
+                    free_entry($1);
+                    free($2);
+                    free_entry($3);
+                    free(s);
+                    free(variable);
+                    free(t);
                 }
                 ;
 
@@ -760,6 +793,19 @@ compound_members: compound_member
 
 compound_member : expression ':' expression
 
+output_stmt     : OUTPUT '(' expression ')' {
+                    if(strcmp($3->type, "STRING") == 0) {
+                        char * s = cat(3, "printf(\"%s\", ", $3->code, ");");
+                        $$ = create_entry(s, "");
+                        free(s);
+                        free_entry($3);
+                    } else {
+                        yyerror(cat(1, "You just can print strings."));
+                        free_entry($3);
+                        $$ = create_entry("", "");
+                    }
+                }
+
 input_stmt      : INPUT '(' PRIMITIVE ',' ID ')' {
                     
                     char * variable = cat(3, $5, "#", concat_stack_with_delimiter(scope_stack, "#"));
@@ -776,7 +822,6 @@ input_stmt      : INPUT '(' PRIMITIVE ',' ID ')' {
                     }
 
                     char * s;
-                    printf("%s\n", getLiteralType($3));
                     if (strcmp(getLiteralType($3), type) == 0) {
                         if (strcmp(type, "STRING") == 0) {
                             // eu sei que $5 é do tipo char *
@@ -786,11 +831,9 @@ input_stmt      : INPUT '(' PRIMITIVE ',' ID ')' {
                             s = cat(19, "size_t ", len, "=0;ssize_t ", nread, ";", nread, "= getline(&", $5, ",&", len,",stdin);if (", $5, "[", nread, " - 1] == '\\n') {", $5, "[", nread, " - 1] = '\\0';}");
 
                         } else if (strcmp(type, "INTEGER") == 0) {
-                            s = cat(3, "scanf(\"%ld\", &", $5, ");");
+                            s = cat(3, "scanf(\"%ld\", &", $5, ");clearBuffer();");
                         } else if (strcmp(type, "DECIMAL") == 0) {
-                            s = cat(3, "scanf(\"%lf\", &", $5, ");");
-                        } else if (strcmp(type, "CARACTERE") == 0) {
-                            s = cat(3, "scanf(\"%c\", &", $5, ");");
+                            s = cat(3, "scanf(\"%lf\", &", $5, ");clearBuffer();");
                         } else {
                             yyerror(cat(3, "Unsupported type ", type, "."));
                         }
@@ -812,12 +855,13 @@ input_stmt      : INPUT '(' PRIMITIVE ',' ID ')' {
                 ;
 
 func_call       : ID '(' args ')' {
-                    
-                    if(strcmp($1, "input") == 0) {
+                    char * call = cat(4, $1, "(", $3->type, ")");
 
-                    } else if(strcmp($1, "output")) {
-
+                    if(!exists_on_table(type_table, call)) {                    
+                        yyerror(cat(3, "Function  ", call, " dont exists."));
                     }
+
+                    printf("AAAAAAAAAAA%s\n", call);
                     char * s = cat(4, $1, "(", $3->code, ")");
                     free($1);
                     free_entry($3);
@@ -829,24 +873,30 @@ func_call       : ID '(' args ')' {
 args            : {$$ = create_entry("", "");};
                 | expressions {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
 expressions     : expression {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 | expression ',' expressions {
                     char * s = cat(3, $1->code, ", ", $3->code);
+                    char * t = cat(3, $1->type, ",", $3->type);
                     free_entry($1);
                     free_entry($3);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
@@ -870,6 +920,31 @@ declaration     : type ID '=' expression {
                     $$ = create_entry(s, "");
                     free(s);
                 }
+                | type ID dimentions {
+                    char * variable = cat(3, $2, "#", concat_stack_with_delimiter(scope_stack, "#"));
+                    
+                    if(exists_on_table(type_table, variable)) {
+                        free(variable);
+                        yyerror(cat(3, "Variable ", $2, " already declared on scope."));
+                        exit(0);
+                    }
+
+                    char * typeClean = strdup($3->code);
+
+                    remove_content_inside_brackets(typeClean);
+
+                    char * t = cat(2, $1->code, typeClean);
+
+                    add_to_table(type_table, variable, t);
+
+                    char * s = cat(5, $1->code, " ", $2, " ", $3->code);
+                    free_entry($1);
+                    free($2);
+                    free(typeClean);
+                    free_entry($3);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
                 | type ID {
                     
                     char * variable = cat(3, $2, "#", concat_stack_with_delimiter(scope_stack, "#"));
@@ -889,6 +964,34 @@ declaration     : type ID '=' expression {
                     free(s);
                 }
                 ;
+
+dimentions      : dimention {
+                    char * s = cat(1, $1->code);
+                    free_entry($1);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                | dimention dimentions {
+                    char * s = cat(2, $1->code, $2->code);
+                    free_entry($1);
+                    free_entry($2);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+                ;
+
+dimention       : '[' INTEGER ']' {
+                    char * s = cat(3, "[", $2, "]");
+                    $$ = create_entry(s, "");
+                    free($2);
+                    free(s);
+                }
+                | '[' ID ']' {
+                    char * s = cat(3, "[", $2, "]");
+                    $$ = create_entry(s, "");
+                    free($2);
+                    free(s);
+                } 
 
 atrib           : ID '=' expression {
                     char * s = cat(3, $1, "=", $3->code);
@@ -1454,4 +1557,23 @@ char* getLiteralType(char* variableType){
     else{
         return "NOTVALID";
     }
+}
+
+void remove_content_inside_brackets(char* str) {
+    int length = strlen(str);
+    int write_pos = 0;
+    int inside_brackets = 0;
+
+    for (int i = 0; i < length; i++) {
+        if (str[i] == '[') {
+            inside_brackets = 1;
+            str[write_pos++] = '[';
+        } else if (str[i] == ']') {
+            inside_brackets = 0;
+            str[write_pos++] = ']';
+        } else if (!inside_brackets) {
+            str[write_pos++] = str[i];
+        }
+    }
+    str[write_pos] = '\0';
 }

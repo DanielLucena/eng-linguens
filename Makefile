@@ -20,11 +20,11 @@ test: clean build
 
 	@echo "TEST 1\n"
 
-	./ADPP tests/type_checking.adpp
+	./ADPP tests/simple.adpp
 
 	@echo "COMPILING TARGET TO C\n"
-	gcc tests/type_checking.output.c -o tests/type_checking.output
-	./tests/type_checking.output 
+	gcc tests/simple.output.c -o tests/simple.output
+	./tests/simple.output 
 
 
 compile_problems: clean build
@@ -53,6 +53,42 @@ compile_problems: clean build
 	@echo "PROBLEM 6\n"
 	./ADPP problems/6_problem.adpp
 	gcc problems/6_problem.output.c -o problems/6_problem -lm
+
+p1: clean build
+	@echo "PROBLEM 1\n"
+	./ADPP problems/1_problem.adpp
+	gcc problems/1_problem.output.c -o problems/1_problem -lm
+
+p2: clean build
+
+	@echo "PROBLEM 2\n"
+	./ADPP problems/2_problem.adpp
+	gcc problems/2_problem.output.c -o problems/2_problem -lm
+
+p3: clean build
+
+	@echo "PROBLEM 3\n"
+	./ADPP problems/3_problem.adpp
+	gcc problems/3_problem.output.c -o problems/3_problem -lm
+
+p4: clean build
+
+	@echo "PROBLEM 4\n"
+	./ADPP problems/4_problem.adpp
+	gcc problems/4_problem.output.c -o problems/4_problem -lm
+
+p5: clean build
+
+	@echo "PROBLEM 5\n"
+	./ADPP problems/5_problem.adpp
+	gcc problems/5_problem.output.c -o problems/5_problem -lm
+
+p6: clean build
+
+	@echo "PROBLEM 6\n"
+	./ADPP problems/6_problem.adpp
+	gcc problems/6_problem.output.c -o problems/6_problem -lm
+
 clean:
 	clear
 	
