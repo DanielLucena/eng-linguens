@@ -1,5 +1,10 @@
 global int x;
-global int x;
+
+func test(int x): void {
+    do {
+        x++;
+    } while(x < 5);
+}
 
 program progress {
 }

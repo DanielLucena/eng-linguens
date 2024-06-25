@@ -66,15 +66,15 @@ return ((esquerdaAltura > direitaAltura ? esquerdaAltura : direitaAltura)) + 1;
 void imprimirArvore(struct Node * root){
 long h=altura(root);
 {long i=1;
-FgfWmQklzHkZuDNLQcXB:
-if(!(i <= h)) goto kIwfoJzKpXVwFaUSsedR;
+nXbXliJddwTiPbQCSoKA:
+if(!(i <= h)) goto fyAoqLRDjhkYfNxqWgWB;
 {
 imprimirNivel(root, 1);
 printf("\n");
 }
 i++;
-goto FgfWmQklzHkZuDNLQcXB;
-kIwfoJzKpXVwFaUSsedR:
+goto nXbXliJddwTiPbQCSoKA;
+fyAoqLRDjhkYfNxqWgWB:
 }
 }
 
@@ -91,14 +91,14 @@ valores[5]=60;
 valores[6]=80;
 long n=sizeof(valores) / sizeof(valores[0]);
 {long i=0;
-onRIsguiKTlUdIZrrbDi:
-if(!(i < n)) goto AzggbaYuHDNVsEfKnbuX;
+ePlTRcYlSInYINmZbdek:
+if(!(i < n)) goto NoKuchmAnibrAnMTRKeJ;
 {
 root=inserir(root, valores[i]);
 }
 i++;
-goto onRIsguiKTlUdIZrrbDi;
-AzggbaYuHDNVsEfKnbuX:
+goto ePlTRcYlSInYINmZbdek;
+NoKuchmAnibrAnMTRKeJ:
 }
 long minChave=INT_MAX;
 long minNivel=0;
