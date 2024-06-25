@@ -339,7 +339,6 @@ func_def        : SUBPROGRAM ID {push_on_stack(scope_stack, $2);} '(' params ')'
                         free_entry($9);
                         exit(1);
                     }
-
                     add_to_table(type_table, funcProt, $8->code);
                     char * s = cat(2, funcDef, $9->code);
                     free(funcDef);
