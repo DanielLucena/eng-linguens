@@ -106,6 +106,7 @@ int scopeId = 1;
             exp_lv_2
             exp_lv_1
             if_stmt
+            else_stmt
             for_stmt
             for_part
             while_stmt
@@ -860,30 +861,47 @@ atrib           : ID '=' expression {
                 }
                 ;
 
-if_stmt         : IF '(' expression ')' block  {
-                    char * s = cat(4, "if(", $3->code, ") ", $5->code);
-                    free_entry($3);
-                    free_entry($5);
+if_stmt         : IF {push_on_stack_id("@if@");} '(' expression ')' block {pop_from_stack(scope_stack);} else_stmt {
+                    char * s;
+                    if(strcmp($8->code,"") == 0){
+                        s = cat(4, "if(", $4->code, ") ", $6->code);
+                    }
+                    else{
+                        s = cat(8, "if(", $4->code, ") ", $6->code, "\nif(!(", $4->code, "))", $8->code);
+                    }
+                     
+                    free_entry($4);
+                    free_entry($6);
+                    free_entry($8);
                     $$ = create_entry(s, "");
                     free(s);
                 }
-                | IF '(' expression ')' block ELSE block {
-                    char * s = cat(8, "if(", $3->code, ") ", $5->code, "\nif(!(", $3->code, "))", $7->code);
-                    free_entry($3);
-                    free_entry($5);
-                    free_entry($7);
+                /* | IF {push_on_stack_id("@if@");} '(' expression ')' block {pop_from_stack(scope_stack);} ELSE {push_on_stack_id("@else@");} block {pop_from_stack(scope_stack);}{
+                    char * s = cat(8, "if(", $4->code, ") ", $6->code, "\nif(!(", $4->code, "))", $10->code);
+                    free_entry($4);
+                    free_entry($6);
+                    free_entry($10);
                     $$ = create_entry(s, "");
                     free(s);
-                }
-                | IF '(' expression ')' block ELSE if_stmt {
+                } */
+                /* | IF '(' expression ')' block ELSE if_stmt {
                     char * s = cat(9, "if(", $3->code, ") ", $5->code, "\nif(!(", $3->code, ")){\n", $7->code, "\n}");
                     free_entry($3);
                     free_entry($5);
                     free_entry($7);
                     $$ = create_entry(s, "");
                     free(s);
-                }
+                } */
                 ;
+
+else_stmt       : {$$ = create_entry("","");}
+                | ELSE {push_on_stack_id("@else@");} block {pop_from_stack(scope_stack);} {
+                    char * s = cat(1, $3->code );
+                    free_entry($3);
+                    $$ = create_entry(s, "");
+                    free(s);
+                }
+
 // {push_on_stack_id("@while@");} block {pop_from_stack(scope_stack);}
 for_stmt        : FOR {push_on_stack_id("@for@");}  '(' for_part ';' expression ';' for_part ')' block {pop_from_stack(scope_stack);} {
                     char * startGoto = generateId();
