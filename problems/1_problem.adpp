@@ -4,5 +4,6 @@ program prob1 {
     int c = 5;
 
     decimal result = x ^ 2 - y + c;
-    printf("%2.f", result);
+    
+    output("Result: " + result);
 }

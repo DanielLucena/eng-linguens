@@ -78,6 +78,7 @@
 "void"                {yylval.sValue = strdup("void"); 
                        return PRIMITIVE;}
 
+
 "true"                {yylval.sValue = strdup("1"); 
                        return BOOLEAN;}
 

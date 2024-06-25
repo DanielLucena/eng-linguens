@@ -2,14 +2,16 @@
 #include <stdlib.h>
 #include <limits.h>
 void clearBuffer() {int c;start:c = getchar();if (c != '\n' && c != EOF) {goto start;}}
+typedef struct teststr {long v1; long v2;} teststr;
 
-void test(long x){
+void test(struct teststr x){
 }
 
 
 int main() {
 long z = 5;
-long x;
+struct teststr x;
+test(x);
 
 return 0;
 }

@@ -1,94 +1,106 @@
-func leMatriz(int matriz[], int linhas, int colunas): void {
+func leMatriz(int ** matriz, int linhas, int colunas): void {
     for (int i = 0; i < linhas; i++) {
-        for (int j = 0; j < colunas; j++) {
-            printf("Elemento [%ld][%ld]: ", i, j);
-            scanf("%ld", &matriz[i][j]);
+        for (int j = 0; j < colunas; j = j + 1) {
+            output("Elemento [" + i + "][" + j + "]: ");
+            int v;
+            input(int, v);
+            matriz[i][j] = v;
         }
     }
 }
 
-func imprimeMatriz(array[array[int]] matriz, int linhas, int colunas): void {
+func imprimeMatriz(int ** matriz, int linhas, int colunas): void {
     for (int i = 0; i < linhas; i++) {
-        for (int j = 0; j < colunas; j++) {
-            printf("%ld ", matriz[i][j]);
+        for (int j = 0; j < colunas; i++) {
+            int v = matriz[i][j];
+            output(" " + v);
         }
-        printf("\n");
+        output("\n");
     }
 }
 
-func somaMatrizes(array[array[int]] a, array[array[int]] b, int linhas, int colunas): void {
-    array[array[int]] soma = new array[int][linhas];
+func somaMatrizes(int ** a, int ** b, int linhas, int colunas): void {
+    int ** soma = new int*[linhas];
 
     for(int i = 0; i < linhas; i++) {
         soma[i] = new int[colunas];
     }
 
     for (int i = 0; i < linhas; i++) {
-        for (int j = 0; j < colunas; j++) {
+        for (int j = 0; j < colunas; j = j + 1) {
             soma[i][j] = a[i][j] + b[i][j];
         }
     }
-    printf("Soma das Matrizes:\n");
+    output("Soma das Matrizes:\n");
     imprimeMatriz(soma, linhas, colunas);
 }
 
-func produtoMatrizes(array[array[int]] a, array[array[int]] b, int linhasA, int colunasA, int colunasB): void {
+func produtoMatrizes(int ** a, int ** b, int linhasA, int colunasA, int colunasB): void {
 
-    array[array[int]] produto = new array[int][linhasA];
+    int ** produto = new int *[linhasA];
 
     for(int i = 0; i < linhasA; i++) {
         produto[i] = new int[colunasB];
     }
 
     for (int i = 0; i < linhasA; i++) {
-        for (int j = 0; j < colunasB; j++) {
-            for (int k = 0; k < colunasA; k++) {
+        for (int j = 0; j < colunasB; j = j + 1) {
+            for (int k = 0; k < colunasA; k = k + 1) {
                 produto[i][j] = produto[i][j] + a[i][k] * b[k][j];
             }
         }
     }
 
-    printf("Produto das Matrizes:\n");
+    output("Produto das Matrizes:\n");
     imprimeMatriz(produto, linhasA, colunasB);
 }
 
 program prob3 {
-    printf("A primeira matriz contará com 3 colunas e 2 linhas");
+    int linhasA;
+    int colunasA;
 
-    int matrizA[2][3];
+    output("Digite o número de linhas da matriz A: ");
+    input(int, linhasA);
+    output("Digite o número de colunas da matriz A: ");
+    input(int, colunasA);
 
-    printf("Digite os elementos da matriz A:\n");
-    leMatriz(matrizA);
+    int ** matrizA = new int*[linhasA];
+
+    for(int i = 0; i < linhasA; i++) {
+        matrizA[i] = new int[colunasA];
+    }
+
+    output("Digite os elementos da matriz A:\n");
+    leMatriz(matrizA, linhasA, colunasA);
 
     int linhasB;
     int colunasB;
 
-    printf("Digite o número de linhas da matriz B: ");              
-    scanf("%ld", &linhasB);
-    printf("Digite o número de colunas da matriz B: ");
-    scanf("%ld", &colunasB);
+    output("Digite o número de linhas da matriz B: ");
+    input(int, linhasB);
+    output("Digite o número de colunas da matriz B: ");
+    input(int, colunasB);
 
-    array[array[int]] matrizB = new array[int][linhasB];
+    int ** matrizB = new int*[linhasB];
 
     for(int i = 0; i < linhasB; i++) {
         matrizB[i] = new int[colunasB];
     }
 
-    printf("Digite os elementos da matriz B:\n");
+    output("Digite os elementos da matriz B:\n");
     leMatriz(matrizB, linhasB, colunasB);
 
     // Verifica e realiza a soma das matrizes, se possível
     if (linhasA == linhasB && colunasA == colunasB) {
         somaMatrizes(matrizA, matrizB, linhasA, colunasA);
     } else {
-        printf("A soma das matrizes não pode ser realizada.\n");
+        output("A soma das matrizes não pode ser realizada.\n");
     }
 
     // Verifica e realiza o produto das matrizes, se possível
     if (colunasA == linhasB) {
         produtoMatrizes(matrizA, matrizB, linhasA, colunasA, colunasB);
     } else {
-        printf("O produto das matrizes não pode ser realizado.\n");
+        output("O produto das matrizes não pode ser realizado.\n");
     }
-
 }
