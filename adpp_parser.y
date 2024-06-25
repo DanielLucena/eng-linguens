@@ -1468,7 +1468,7 @@ entry* getEntryForExpression(entry *firstOperand, entry *secondOperand, char * o
 
         if(strcmp(operator,"^")== 0){
             const char * my_math_lib= "double my_exp(double x){double sum=1.0;double term=1.0;for(int n=1;n<20;++n){term*=x/n;sum+=term;}return sum;}\ndouble my_log(double x){if(x<=0.0)return -1e308;double y=(x-1)/(x+1);double y2=y*y;double sum=0.0;for(int n=1;n<20;n+=2){sum+=(1.0/n)*y;y*= y2;}return 2*sum;}\ndouble power(double bs,double exp){double r=1.0;int int_exp=(int)exp;double frac_exp=exp-int_exp;while(int_exp){if(int_exp%2)r*=bs;bs*=bs;int_exp/=2;}if(frac_exp!=0.0)r*=my_exp(frac_exp*my_log(bs));return r;}";
-            checkTypeBinaryExpression(firstOperand, secondOperand, operator);
+            if((strcmp(firstOperand->type, "long") == 0) || (strcmp(secondOperand->type, "long") == 0) && (strcmp(firstOperand->type, "double") == 0) || (strcmp(secondOperand->type, "double") == 0));
             s = cat(6, "power(", firstOperand->code, "+ 0.0", ", ", secondOperand->code, " + 0.0)");
                 if(!exists_on_table(type_table, my_math_lib)){
                     add_to_table(type_table, my_math_lib, "#IMPORT");
