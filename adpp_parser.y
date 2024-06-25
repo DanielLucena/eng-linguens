@@ -1447,6 +1447,7 @@ entry* getEntryForExpression(entry *firstOperand, entry *secondOperand, char * o
     firstOperand->code,secondOperand->code,operator); */
     /* printf("entry\n"); */
     char* s;
+    char* t = firstOperand->type;
     if((strcmp(firstOperand->type, "string") == 0)){
         const char* string_concat_func = "char* concat(const char* s1, const char* s2){char* r=malloc(strlen(s1)+strlen(s2)+1);if(r){strcpy(r,s1);strcat(r,s2);}return r;}";
         if(!exists_on_table(type_table, string_concat_func)){
@@ -1462,6 +1463,9 @@ entry* getEntryForExpression(entry *firstOperand, entry *secondOperand, char * o
         return create_entry(s, "string");
     }
     else{
+        char *boolReturnOperands[] = {  "==","!=",">","<",">=","<=","&&","||"};
+        int isBoolReturnOperand = strBelongsToStrArray(operator,boolReturnOperands , sizeof(boolReturnOperands)/sizeof(boolReturnOperands[0]));
+
         if(strcmp(operator,"^")== 0){
             const char * my_math_lib= "double my_exp(double x){double sum=1.0;double term=1.0;for(int n=1;n<20;++n){term*=x/n;sum+=term;}return sum;}\ndouble my_log(double x){if(x<=0.0)return -1e308;double y=(x-1)/(x+1);double y2=y*y;double sum=0.0;for(int n=1;n<20;n+=2){sum+=(1.0/n)*y;y*= y2;}return 2*sum;}\ndouble power(double bs,double exp){double r=1.0;int int_exp=(int)exp;double frac_exp=exp-int_exp;while(int_exp){if(int_exp%2)r*=bs;bs*=bs;int_exp/=2;}if(frac_exp!=0.0)r*=my_exp(frac_exp*my_log(bs));return r;}";
             checkTypeBinaryExpression(firstOperand, secondOperand, operator);
@@ -1469,23 +1473,30 @@ entry* getEntryForExpression(entry *firstOperand, entry *secondOperand, char * o
                 if(!exists_on_table(type_table, my_math_lib)){
                     add_to_table(type_table, my_math_lib, "#IMPORT");
                 }
-                return create_entry(s, "double");
+                /* return create_entry(s, "double"); */
+                t = "double";
         }
         else if((strcmp(firstOperand->type,"long")== 0) && (strcmp(secondOperand->type,"double")== 0)){
             s = cat(5, "( (double)", firstOperand->code, ") ", operator, secondOperand->code);
-            return create_entry(s, secondOperand->type);
+            /* return create_entry(s, secondOperand->type); */
+            t=secondOperand->type;
         }
         else if((strcmp(firstOperand->type,"double")== 0) && (strcmp(secondOperand->type,"long")== 0)){
             s = cat(5, firstOperand->code, operator, "( (double)", secondOperand->code, ") ");
-            return create_entry(s, firstOperand->type);
+            /* return create_entry(s, firstOperand->type); */
+            t = firstOperand->type;
         }
         else{
             checkTypeBinaryExpression(firstOperand, secondOperand, operator);
             s = cat(3, firstOperand->code, operator, secondOperand->code);
         }
+
+        if(isBoolReturnOperand){
+            t = "bool";
+        }
         
         //printf("\tExpression: %s\n\tExprType: %s\n",s,firstOperand->type);
-        return create_entry(s, firstOperand->type);
+        return create_entry(s, t);
     }
 
 } 
