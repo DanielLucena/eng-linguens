@@ -15,6 +15,15 @@ char *cat(int, ...);
 void populateTypeTablePrimitives();
 void insert_imports(const char*, const char*);
 void generateRandomId(char *, int);
+
+void checkTypeBinaryExpression(entry*, entry*, char*);
+void checkTypeUnaryExpression(entry*, char*);
+int isTypeValidForOperator(char*, char*);
+int strBelongsToStrArray( char*,  char ** , int );
+entry* getEntryForExpression(entry*, entry*, char*);
+char* convertToStirng(entry*);
+void checkAtrib(char*, entry*);
+char* getLiteralType(char*);
 void printVariables(const char*, const char*);
 void push_on_stack_id(char*);
 
@@ -23,6 +32,8 @@ extern char * yytext;
 extern FILE * yyin, * yyout;
 HashTable * type_table;
 Stack * scope_stack;
+int Errors = 0;
+
 %}
 
 %union {
@@ -109,11 +120,18 @@ Stack * scope_stack;
 %%
 
 file            : {push_on_stack(scope_stack, "ADPP");} pre_comp_directs func_defs main func_defs {
+                    if(Errors > 0){
+                        Errors > 1  
+                            ? printf("Unable to compile the program, %d errors found\n", Errors)
+                            : printf("Unable to compile the program, 1 error found\n");
+                        exit(0);
+                    }
                     fprintf(yyout, "#include <stdio.h>\n");
                     fprintf(yyout, "#include <stdlib.h>\n");
                     fprintf(yyout, "#include <limits.h>\n");
 
                     iterate_table(type_table, insert_imports);
+                    
                     fprintf(yyout, "%s\n%s\n%s\n%s", $2->code, $3->code, $5->code, $4->code);
                     free_entry($2);
                     free_entry($3);
@@ -242,7 +260,7 @@ stmt            : ';' {$$ = create_entry(";","");}
 type            : PRIMITIVE {
                     if (exists_on_table(type_table, $1)) {
                         char * s = get_value_from_table(type_table, $1);
-                        $$ = create_entry(s, $1);
+                        $$ = create_entry(s, getLiteralType($1));
                         free($1);
                         free(s);
                     } else {
@@ -383,9 +401,11 @@ expression      : expression '?' expression ':' expression {
                 }
                 | exp_lv_8 {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
@@ -398,9 +418,11 @@ exp_lv_8        : exp_lv_8 OR exp_lv_7 {
                 }
                 | exp_lv_7 {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
@@ -413,9 +435,11 @@ exp_lv_7        : exp_lv_7 AND exp_lv_6 {
                 }
                 | exp_lv_6 {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
@@ -448,11 +472,10 @@ exp_lv_6        : exp_lv_6 MORE_THAN exp_lv_5 {
                     free(s);
                 }
                 | exp_lv_6 COMPARISON exp_lv_5 {
-                    char * s = cat(3, $1->code, " == ", $3->code);
+                    entry * e = getEntryForExpression($1,$3, "==");
                     free_entry($1);
                     free_entry($3);
-                    $$ = create_entry(s, "BOOLEAN");
-                    free(s);
+                    $$ = e;     
                 }
                 | exp_lv_6 DIFFERENT exp_lv_5 {
                     char * s = cat(3, $1->code, " != ", $3->code);
@@ -463,9 +486,11 @@ exp_lv_6        : exp_lv_6 MORE_THAN exp_lv_5 {
                 }
                 | exp_lv_5 {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
@@ -475,11 +500,14 @@ exp_lv_5        : NULLTK {
                     free(s);
                 }
                 | exp_lv_5 PLUS exp_lv_4 {
-                    char * s = cat(3, $1->code, " + ", $3->code);
+                    entry * e = getEntryForExpression($1,$3, "+");
+                    if((strcmp($1->type, "STRING") == 0) 
+                    && !exists_on_table(type_table, "#include <string.h>")){
+                        add_to_table(type_table, "#include <string.h>", "#IMPORT");
+                    }
                     free_entry($1);
                     free_entry($3);
-                    $$ = create_entry(s, "");
-                    free(s);
+                    $$ = e;
                 }
                 | exp_lv_5 MINUS exp_lv_4 {
                     char * s = cat(3, $1->code, " - ", $3->code);
@@ -490,9 +518,11 @@ exp_lv_5        : NULLTK {
                 }
                 | exp_lv_4 {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
@@ -518,17 +548,18 @@ exp_lv_4        : exp_lv_4 TIMES exp_lv_3 {
                     free(s);
                 }
                 | exp_lv_4 MOD exp_lv_3 {
-                    char * s = cat(3, $1->code, " % ", $3->code);
+                    entry * e = getEntryForExpression($1,$3, "%");
                     free_entry($1);
                     free_entry($3);
-                    $$ = create_entry(s, "");
-                    free(s);
+                    $$ = e;
                 }
                 | exp_lv_3 {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
@@ -545,9 +576,11 @@ exp_lv_3        : exp_lv_3 POWER exp_lv_2 {
                 }
                 | exp_lv_2 {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
@@ -577,23 +610,40 @@ exp_lv_2        : DOLLAR exp_lv_1 {
                 }
                 | exp_lv_1 {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
 exp_lv_1        : literal {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 | ID {
                     char * s = cat(1, $1);
+                    char * variable = cat(3, $1, "##", concat_stack_with_delimiter(scope_stack, "##"));
+                    char * t;
+                    if(!exists_on_table(type_table, variable)){
+                        yyerror(cat(3, "Variable ", $1, " is not declared on scope."));
+                        t = cat(1, "null");
+                    }
+                    else{
+                        t = cat(1, get_value_from_table(type_table,variable));
+                    }
+                    
+                    //printf("variable founded: %s of type: %s\n",variable,t);
+                    free(variable);
                     free($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 | '(' expression ')' {
                     char * s = cat(3, "(", $2->code, ")");
@@ -672,7 +722,7 @@ literal         : INTEGER {
                 }
                 | STRING {
                     char * s = cat(1, $1);
-                    //free($1); Por algum motivo tá dando errado
+                    free($1); //expressão regular de string modificada, por enquanto sem erro
                     $$ = create_entry(s, "STRING");
                     free(s);
                 }
@@ -729,9 +779,25 @@ expressions     : expression {
                 }
                 ;
 
-declaration     : type atrib {
-                    char * s = cat(3, $1->code, " ", $2->code);
-                    free_entry($2);
+declaration     : type ID '=' expression {
+                    char * s = cat(5, $1->code," ", $2, " = ", $4->code);
+                    char * variable = cat(3, $2, "##", concat_stack_with_delimiter(scope_stack, "##"));
+                    if(exists_on_table(type_table, variable)) {                    
+                        yyerror(cat(3, "Variable ", $2, " already declared on scope."));
+                    }
+                    else if(strcmp($1->type, $4->type) != 0){
+                        yyerror(cat(4,"invalid attribution, variable of type ", $1->type, " can't recieve a value of type ", $4->type));
+                    }
+                    else{
+                        // printf("internal Type: %s\n",$1->type);
+                        // printf("internal Variable: %s\n",variable);
+                        add_to_table(type_table, variable, $1->type);
+                    }
+                    
+                    free(variable);
+                    free_entry($1);
+                    free($2);
+                    free_entry($4);
                     $$ = create_entry(s, "");
                     free(s);
                 }
@@ -745,7 +811,7 @@ declaration     : type atrib {
                         exit(0);
                     }
                     
-                    add_to_table(type_table, variable, $1->code);
+                    add_to_table(type_table, variable, $1->type);
 
                     char * s = cat(3, $1->code, " ", $2);
                     free_entry($1);
@@ -757,10 +823,14 @@ declaration     : type atrib {
 
 atrib           : ID '=' expression {
                     char * s = cat(3, $1, "=", $3->code);
+                    char * t = cat(1,$3->type);
+                    //printf("exprType: %s\n",t);
+                    checkAtrib($1,$3);
                     free($1);
                     free_entry($3);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 | ID INCREMENT {
                     char * s = cat(2, $1, "++");
@@ -822,8 +892,7 @@ for_stmt        : FOR  '(' for_part ';' expression ';' for_part ')' block {
                     char * endGoto = malloc(sizeof(char)*21);
                     generateRandomId(endGoto, 21);
 
-                    char * s = cat(18, "{", $3->code, ";\n", startGoto, ":\n", "if(!(", $5->code, ")) goto ", endGoto, ";\n", $9->code, "\n", $7->code, ";\ngoto ", startGoto, ";\n", endGoto, ":\n}");
-
+                    char * s = cat(18, "{", $3->code, ";\n", startGoto, ":\n", "if(!(", $5->code, ")) goto ", endGoto, ";\n", $9->code, "\n", $7->code, ";\ngoto ", startGoto, ";\n", endGoto, ":\n}"); 
                     free_entry($3);
                     free_entry($5);
                     free_entry($7);
@@ -1060,6 +1129,7 @@ void insert_imports(const char* key, const char* value) {
 }
 
 int yyerror (char *msg) {
+    Errors++;
 	fprintf (stderr, "line %d: %s at '%s'\n", yylineno, msg, yytext);
 	return 0;
 }
@@ -1120,4 +1190,160 @@ void generateRandomId(char *str, int size) {
         str[i] = charset[key];
     }
     str[size - 1] = '\0';
+}
+
+entry* getEntryForExpression(entry *firstOperand, entry *secondOperand, char * operator){
+    /* printf("Generating expression for:[%s, %s, %s]\n",
+    firstOperand->code,secondOperand->code,operator); */
+    
+    char* s;
+    if(secondOperand == NULL){
+        checkTypeUnaryExpression(firstOperand, operator);
+        s = cat(2, firstOperand->code, operator);
+        //printf("\tExpression: %s\n\tExprType: %s\n",s,firstOperand->type);
+        return create_entry(s, firstOperand->type);
+    }
+    else if((strcmp(firstOperand->type, "STRING") == 0)){
+        if((strcmp(operator, "+") == 0) && (strcmp(secondOperand->type, "STRING") != 0)){ //segundo operando não é string
+            s = cat(5, "strcat(",firstOperand->code,", ", convertToStirng(secondOperand),")");
+        }
+        else{
+            s = cat(5, "strcat(",firstOperand->code, ", ",secondOperand->code,")");
+        }
+        //printf("\tExpression: %s\n\tExprType: %s\n",s,"STRING");
+        return create_entry(s, "STRING");
+    }
+    else{
+        checkTypeBinaryExpression(firstOperand, secondOperand, operator);
+        s = cat(3, firstOperand->code, operator, secondOperand->code);
+        //printf("\tExpression: %s\n\tExprType: %s\n",s,firstOperand->type);
+        return create_entry(s, firstOperand->type);
+    }
+
+    } 
+
+
+char* convertToStirng(entry *operand){
+    const char* string_conversion_lib = "#define BUF_SZ 50\nstatic char buf[BUF_SZ];\nconst char *d_to_s(double v){snprintf(buf, BUF_SZ, \"%f\", v);return buf;}\nconst char *b_to_s(int v){return v ? \"true\" : \"false\";}\nconst char *i_to_s(long v){snprintf(buf, BUF_SZ, \"%ld\", v);return buf;}\nconst char *c_to_s(char v){snprintf(buf, BUF_SZ, \"%c\", v);return buf;}";
+    if(!exists_on_table(type_table, string_conversion_lib)){
+        add_to_table(type_table, string_conversion_lib, "#IMPORT");
+    }
+    char* s;
+    if(strcmp(operand->type, "INTEGER") == 0){
+
+        s = cat(3, "i_to_s(", operand->code, ")");
+    }
+    else if(strcmp(operand->type, "DECIMAL") == 0){
+        s = cat(3, "d_to_s(", operand->code, ")");
+    }
+    else if(strcmp(operand->type, "CARACTERE") == 0){
+        s = operand->code;
+        s[0] = s[2] = '\"';
+    }
+    else if(strcmp(operand->type, "BOOLEAN") == 0){
+        if(strcmp(operand->code, "1") == 0){ 
+            s = "\"true\"";
+        }
+        else{
+            s = "\"false\"";
+        }
+    }
+    return s;
+}
+void checkTypeBinaryExpression(entry *firstOperand, entry *secondOperand, char * operator){
+    //printf("first operand: code[%s] type[%s]\n", firstOperand->code, firstOperand->type);
+    //printf("second operand: code[%s] type[%s]\n", secondOperand->code, secondOperand->type);
+    if(strcmp(firstOperand->type,secondOperand->type)){
+        yyerror(cat(5,"invalid operands, ", firstOperand->type, " and ", secondOperand->type, " are not compatible"));
+    }
+    if(!isTypeValidForOperator(firstOperand->type, operator)){
+        yyerror(cat(4,"operator \"", operator,"\" does not suport support operand of type: ", firstOperand->type ));
+    }
+}
+
+void checkTypeUnaryExpression(entry *firstOperand, char* operator){
+    //printf("unique operand: code[%s] type[%s]\n", firstOperand->code, firstOperand->type);
+    if(!isTypeValidForOperator(firstOperand->type, operator)){
+        yyerror(cat(4,"operator \"", operator,"\" does not suport support operand of type: ", firstOperand->type ));
+    }
+}
+
+int isTypeValidForOperator(char* type, char* operator){
+    char *intValidOperands[] = { "+", "-", "/", "*","%", "==","!=",">","<",">=","<=","++","--" };
+    int isValidForInt = (strcmp(type, "INTEGER") == 0) && strBelongsToStrArray(operator,intValidOperands , sizeof(intValidOperands)/sizeof(intValidOperands[0]));
+
+    char *decimalValidOperands[] = { "+", "-", "/", "*", "^", "==","!=",">","<",">=","<=" };
+    int isValidForDecimal = (strcmp(type, "DECIMAL") == 0) && strBelongsToStrArray(operator,decimalValidOperands , sizeof(decimalValidOperands)/sizeof(decimalValidOperands[0]));
+
+    char *boolValidOperands[] = {"==","!=",">","<",">=","<=", "&&", "||"};
+    int isValidForBool = (strcmp(type, "BOOLEAN") == 0) && strBelongsToStrArray(operator,boolValidOperands, sizeof(boolValidOperands)/sizeof(boolValidOperands[0]));
+
+    char *charValidOperands[] = {"+", "-", "/", "*","%", "==","!=",">","<",">=","<="};
+    int isValidForChar = (strcmp(type, "CARACTERE") == 0) && strBelongsToStrArray(operator,charValidOperands, sizeof(charValidOperands)/sizeof(charValidOperands[0]));
+
+    char *stringValidOperands[] = {"+", "==", "!="};
+    int isValidForString = (strcmp(type, "STRING") == 0) && strBelongsToStrArray(operator,stringValidOperands, sizeof(stringValidOperands)/sizeof(stringValidOperands[0]));
+
+    if(isValidForInt){
+        return 1;
+    }
+    else if(isValidForDecimal){
+        return 1;
+    }
+    else if(isValidForBool){
+        return 1;
+    }
+    else if(isValidForChar){
+        return 1;
+    }
+    else if(isValidForString){
+        return 1;
+    }
+    else{
+        return 0;
+    }
+}
+
+int strBelongsToStrArray( char* str, char *array[], int strArrayLength){
+    //printf("tamanho do array: %d\n", strArrayLength);
+    for(int i=0; i<strArrayLength; i++){
+        if(strcmp(str, array[i]) == 0){
+            //printf("achou %s é igual a %s\n", str, array[i]);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void checkAtrib(char* id, entry* expr){
+    char * variable = cat(3, id, "##", concat_stack_with_delimiter(scope_stack, "##"));
+    //printf("variable %s atrib with %s\n", variable, expr->code);
+    if(exists_on_table(type_table, variable)) {
+        if(strcmp(expr->type, get_value_from_table(type_table,variable)) != 0){
+            yyerror(cat(4,"invalid attribution, variable of type ", expr->type, " can't recieve a value of type ",get_value_from_table(type_table,variable)));
+        }
+        //printf("variable type is %s atrib with an expression of %s type\n", get_value_from_table(type_table,variable), expr->type);
+    }
+    free(variable);
+}
+
+char* getLiteralType(char* variableType){
+    if(strcmp(variableType, "int") == 0){
+        return "INTEGER";
+    }
+    else if(strcmp(variableType, "decimal") == 0){
+        return "DECIMAL";
+    }
+    else if(strcmp(variableType, "string") == 0){
+        return "STRING";
+    }
+    else if(strcmp(variableType, "bool") == 0){
+        return "BOOLEAN";
+    }
+    else if(strcmp(variableType, "char") == 0){
+        return "CARACTERE";
+    }
+    else{
+        return "NOTVALID";
+    }
 }

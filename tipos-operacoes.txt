@@ -1,0 +1,10 @@
+precedencia | operações                                                 | tipos
+1           | (chamada de função), x[], x.y                             | array( x[]), struct( x.y)
+2           | ++(prefixo), --(prefixo), $(desreferência), &(endereço)   | int(++, --), ponteiro($, &)
+3           | ^(potencia)                                               | int(precisa converter para float), float
+4           | *(multiplicação), /, %                                    | int, float(% nao)
+5           | +, -                                                      | int, float, string(+)
+6           | <, <=, >, >=, ==, !=                                      | int, float, boolean, string  
+8           | &&                                                        | boolean
+9           | ||                                                        | boolean
+10          | ?:(ternario)                                              | first(boolean), second(T) third(T)
