@@ -3,39 +3,6 @@ rec rational_t {
     int denominador
 }
 
-program prob4 { 
-    #rational_t r1 = criarRacional(2, 3);
-    #rational_t r2 = criarRacional(4, 6);
-    #rational_t r3 = criarRacional(1, 2);
-    #rational_t r4 = criarRacional(3, 4);
-
-    printf("r1: %ld/%ld\n", r1.numerador, r1.denominador);
-    printf("r2: %ld/%ld\n", r2.numerador, r2.denominador);
-
-    if (iguais(r1, r2)) {
-        printf("r1 e r2 são iguais.\n");
-    } else {
-        printf("r1 e r2 não são iguais.\n");
-    }
-
-    #rational_t somaR = soma(r1, r3);
-    printf("Soma de r1 e r3: %ld/%ld\n", somaR.numerador, somaR.denominador);
-
-    #rational_t subtracaoR = subtracao(r1, r3);
-    printf("Subtração de r1 e r3: %ld/%ld\n", subtracaoR.numerador, subtracaoR.denominador);
-
-    #rational_t multiplicacaoR = multiplicacao(r1, r4);
-    printf("Multiplicação de r1 e r4: %ld/%ld\n", multiplicacaoR.numerador, multiplicacaoR.denominador);
-
-    #rational_t divisaoR = divisao(r1, r4);
-    printf("Divisão de r1 por r4: %ld/%ld\n", divisaoR.numerador, divisaoR.denominador);
-
-    #rational_t inversoR = inverso(r1);
-    printf("Inverso de r1: %ld/%ld\n", inversoR.numerador, inversoR.denominador);
-
-    return 0;
-}
-
 func mdc(int a, int b): int {
     while (b != 0) {
         int temp = b;
@@ -117,4 +84,37 @@ func inverso(#rational_t r): #rational_t {
 
 func divisao(#rational_t r1, #rational_t r2): #rational_t{
     return multiplicacao(r1, inverso(r2));
+}
+
+program prob4 { 
+    #rational_t r1 = criarRacional(2, 3);
+    #rational_t r2 = criarRacional(4, 6);
+    #rational_t r3 = criarRacional(1, 2);
+    #rational_t r4 = criarRacional(3, 4);
+
+    printf("r1: %ld/%ld\n", r1.numerador, r1.denominador);
+    printf("r2: %ld/%ld\n", r2.numerador, r2.denominador);
+
+    if (iguais(r1, r2)) {
+        printf("r1 e r2 são iguais.\n");
+    } else {
+        printf("r1 e r2 não são iguais.\n");
+    }
+
+    #rational_t somaR = soma(r1, r3);
+    printf("Soma de r1 e r3: %ld/%ld\n", somaR.numerador, somaR.denominador);
+
+    #rational_t subtracaoR = subtracao(r1, r3);
+    printf("Subtração de r1 e r3: %ld/%ld\n", subtracaoR.numerador, subtracaoR.denominador);
+
+    #rational_t multiplicacaoR = multiplicacao(r1, r4);
+    printf("Multiplicação de r1 e r4: %ld/%ld\n", multiplicacaoR.numerador, multiplicacaoR.denominador);
+
+    #rational_t divisaoR = divisao(r1, r4);
+    printf("Divisão de r1 por r4: %ld/%ld\n", divisaoR.numerador, divisaoR.denominador);
+
+    #rational_t inversoR = inverso(r1);
+    printf("Inverso de r1: %ld/%ld\n", inversoR.numerador, inversoR.denominador);
+
+    return 0;
 }

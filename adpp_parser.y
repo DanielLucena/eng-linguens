@@ -628,7 +628,7 @@ exp_lv_2        : DOLLAR exp_lv_1 {
                 | AMPERSAND exp_lv_1 {
                     char * s = cat(3, "(&", $2->code, ")");
                     free_entry($2);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, cat(2, $2->type, "*"));
                     free(s);
                 }
                 | INCREMENT exp_lv_1 {
