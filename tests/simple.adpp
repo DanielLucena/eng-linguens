@@ -3,6 +3,10 @@ global int z = 0;
 global int w = 0;
 global int v = 0;
 
+func test(int x): void{
+
+}
+
 func test(int x): void {
     if(x) {
         int j;
@@ -12,7 +16,7 @@ func test(int x): void {
         int j;
     } 
     else {
-        j;
+        
     }
 }
 

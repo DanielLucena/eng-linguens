@@ -2,41 +2,73 @@
 
 program typeChecking {
     //operaçoes entre numericos
-    1 + 2;
-    1.2 + 3.4;
+    // 1 + 2;
+    // 1.2 + 3.4;
     // 1.2 + 2;
     // 1 + 3.4;
-    1 % 2;
+    // 1 % 2;
     //1.2 % 2.2;
     //1 % 2.2;
   
-
-
     //boleanos
-    true == true;
-    false == false;
-    true == false;
-    false == true;
+    // true == true;
+    // false == false;
+    // true == false;
+    // false == true;
     // true == 1;
     // false == 3.4;
 
-
     //operaçoes de concatenação com string
-
     // printf("Hello" + "world");
     // printf("Hello" + 1);
-    "Hello" + 1.2;
-    "Hello" + true;
-    "Hello" + false;
-    "Hello" + 'W';
-    "Hello" + "world" + "world";
+    // string msg = "Hello" + 1.2;
+    // "Hello" + true;
+    // "Hello" + false;
+    // "Hello" + 'W';
+    string d = "Hello" + "world";
 
     //atrib
     //int A;
     // A = 2.0;
-    int B = 2;
+    
     // int B;
     //int B  = 3;
-    B;
+    decimal b = 2.0;
+    //int b = 2;
+    decimal a = 4.0; 
+    // int a = 4; 
+    a + b;
+    a - b;
+    a * b;
+    a * -b;
+    a / b;
+    // a || b;
+    // a && b;
+    // a > b;
+    // a < b;
+    // a == b;
+    // a != b;
+    // a >= b;
+    // a <= b;
+    // a / -b;
+    a ^ b;
+    // int c = a / b;
+    // printf("%s %ld\n",d, c);
     
+    bool x = true;
+    bool y = false;
+    x && y;
+    x || y;
+    x == y;
+    x != y;
+    // x > y;
+    // x + y;
+    int i=0;
+    while(i>10){
+        if(i>5){
+            break; // é aceito mas n funciona   
+        }
+        i++;
+    }
+    printf("%f",(a + b / a *b ^2.0 + 1.9));
 }

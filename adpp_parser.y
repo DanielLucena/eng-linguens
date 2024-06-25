@@ -21,6 +21,8 @@ void checkTypeUnaryExpression(entry*, char*);
 int isTypeValidForOperator(char*, char*);
 int strBelongsToStrArray( char*,  char ** , int );
 entry* getEntryForExpression(entry*, entry*, char*);
+entry* getEntryForUnaryExprPrefix(entry *, char * );
+entry* getEntryForUnaryExprSufix(entry *, char * );
 char* convertToStirng(entry*);
 void checkAtrib(char*, entry*);
 char* getLiteralType(char*);
@@ -111,7 +113,7 @@ int scopeId = 1;
             for_part
             while_stmt
             do_while_stmt
-            switch_stmt
+            /* switch_stmt */
             return_stmt
             break_stmt
             continue_stmt
@@ -220,12 +222,12 @@ stmt            : ';' {$$ = create_entry(";","");}
                     $$ = create_entry(s, "");
                     free(s);
                 }
-                | switch_stmt {
+                /* | switch_stmt {
                     char * s = cat(2, $1->code, "\n");
                     free_entry($1);
                     $$ = create_entry(s, "");
                     free(s);
-                }
+                } */
                 | return_stmt ';' {
                     char * s = cat(2, $1->code, ";\n");
                     free_entry($1);
@@ -314,6 +316,7 @@ func_def        : SUBPROGRAM ID {push_on_stack(scope_stack, $2);} '(' params ')'
                     }
                     
                     if(exists_on_table(type_table, funcProt)) {
+                        printf("func %s type %s\n",funcProt, get_value_from_table(type_table, funcProt));
                         yyerror(cat(3, "Function ", $2, " has already bean declareted."));
                         free(funcProt);
                         free($2);
@@ -411,11 +414,10 @@ expression      : expression '?' expression ':' expression {
                 ;
 
 exp_lv_8        : exp_lv_8 OR exp_lv_7 {
-                    char * s = cat(3, $1->code, " || ", $3->code);
+                    entry * e = getEntryForExpression($1, $3, "||");
                     free_entry($1);
                     free_entry($3);
-                    $$ = create_entry(s, "BOOLEAN");
-                    free(s);
+                    $$ = e;
                 }
                 | exp_lv_7 {
                     char * s = cat(1, $1->code);
@@ -428,11 +430,10 @@ exp_lv_8        : exp_lv_8 OR exp_lv_7 {
                 ;
 
 exp_lv_7        : exp_lv_7 AND exp_lv_6 {
-                    char * s = cat(3, $1->code, " && ", $3->code);
+                    entry * e = getEntryForExpression($1, $3, "&&");
                     free_entry($1);
                     free_entry($3);
-                    $$ = create_entry(s, "BOOLEAN");
-                    free(s);
+                    $$ = e;
                 }
                 | exp_lv_6 {
                     char * s = cat(1, $1->code);
@@ -445,32 +446,28 @@ exp_lv_7        : exp_lv_7 AND exp_lv_6 {
                 ;
 
 exp_lv_6        : exp_lv_6 MORE_THAN exp_lv_5 {
-                    char * s = cat(3, $1->code, " > ", $3->code);
+                    entry * e = getEntryForExpression($1, $3, ">");
                     free_entry($1);
                     free_entry($3);
-                    $$ = create_entry(s, "BOOLEAN");
-                    free(s);
+                    $$ = e;
                 }
                 | exp_lv_6 LESS_THAN exp_lv_5 {
-                    char * s = cat(3, $1->code, " < ", $3->code);
+                    entry * e = getEntryForExpression($1, $3, "<");
                     free_entry($1);
                     free_entry($3);
-                    $$ = create_entry(s, "BOOLEAN");
-                    free(s);
+                    $$ = e;
                 }
                 | exp_lv_6 MORE_THAN_EQUALS exp_lv_5 {
-                    char * s = cat(3, $1->code, " >= ", $3->code);
+                    entry * e = getEntryForExpression($1, $3, ">=");
                     free_entry($1);
                     free_entry($3);
-                    $$ = create_entry(s, "BOOLEAN");
-                    free(s);
+                    $$ = e;
                 }
                 | exp_lv_6 LESS_THAN_EQUALS exp_lv_5 {
-                    char * s = cat(3, $1->code, " <= ", $3->code);
+                    entry * e = getEntryForExpression($1, $3, "<=");
                     free_entry($1);
                     free_entry($3);
-                    $$ = create_entry(s, "BOOLEAN");
-                    free(s);
+                    $$ = e;
                 }
                 | exp_lv_6 COMPARISON exp_lv_5 {
                     entry * e = getEntryForExpression($1,$3, "==");
@@ -479,11 +476,10 @@ exp_lv_6        : exp_lv_6 MORE_THAN exp_lv_5 {
                     $$ = e;     
                 }
                 | exp_lv_6 DIFFERENT exp_lv_5 {
-                    char * s = cat(3, $1->code, " != ", $3->code);
+                    entry * e = getEntryForExpression($1, $3, "!=");
                     free_entry($1);
                     free_entry($3);
-                    $$ = create_entry(s, "BOOLEAN");
-                    free(s);
+                    $$ = e;
                 }
                 | exp_lv_5 {
                     char * s = cat(1, $1->code);
@@ -511,11 +507,10 @@ exp_lv_5        : NULLTK {
                     $$ = e;
                 }
                 | exp_lv_5 MINUS exp_lv_4 {
-                    char * s = cat(3, $1->code, " - ", $3->code);
+                    entry * e = getEntryForExpression($1, $3, "-");
                     free_entry($1);
                     free_entry($3);
-                    $$ = create_entry(s, "");
-                    free(s);
+                    $$ = e;
                 }
                 | exp_lv_4 {
                     char * s = cat(1, $1->code);
@@ -528,25 +523,22 @@ exp_lv_5        : NULLTK {
                 ;
 
 exp_lv_4        : exp_lv_4 TIMES exp_lv_3 {
-                    char * s = cat(3, $1->code, " * ", $3->code);
+                    entry * e = getEntryForExpression($1, $3, "*");
                     free_entry($1);
                     free_entry($3);
-                    $$ = create_entry(s, "");
-                    free(s);
+                    $$ = e;
                 }
                 | exp_lv_4 TIMES MINUS exp_lv_3 {
-                    char * s = cat(3, $1->code, " * -", $4->code);
+                    entry * e = getEntryForExpression($1, $4, "*-");
                     free_entry($1);
                     free_entry($4);
-                    $$ = create_entry(s, "");
-                    free(s);
+                    $$ = e;
                 }
                 | exp_lv_4 SPLIT exp_lv_3 {
-                    char * s = cat(3, $1->code, " / ", $3->code);
+                    entry * e = getEntryForExpression($1, $3, "/");
                     free_entry($1);
                     free_entry($3);
-                    $$ = create_entry(s, "");
-                    free(s);
+                    $$ = e;
                 }
                 | exp_lv_4 MOD exp_lv_3 {
                     entry * e = getEntryForExpression($1, $3, "%");
@@ -565,15 +557,10 @@ exp_lv_4        : exp_lv_4 TIMES exp_lv_3 {
                 ;
 
 exp_lv_3        : exp_lv_3 POWER exp_lv_2 {
-                    char * s = cat(6, "pow(", $1->code, "+ 0.0", ", ", $3->code, " + 0.0)");
-                    if(!exists_on_table(type_table, "#include <math.h>")){
-                        add_to_table(type_table, "#include <math.h>", "#IMPORT");
-                    }
-
+                    entry * e = getEntryForExpression($1, $3, "^");
                     free_entry($1);
                     free_entry($3);
-                    $$ = create_entry(s, "");
-                    free(s);
+                    $$ = e;
                 }
                 | exp_lv_2 {
                     char * s = cat(1, $1->code);
@@ -598,16 +585,29 @@ exp_lv_2        : DOLLAR exp_lv_1 {
                     free(s);
                 }
                 | INCREMENT exp_lv_1 {
-                    char * s = cat(3, "(++", $2->code, ")");
+                    entry * e = getEntryForUnaryExprPrefix($2, "++");
                     free_entry($2);
-                    $$ = create_entry(s, "");
-                    free(s);
+                    $$ = e;
                 }
                 | DECREMENT exp_lv_1 {
-                    char * s = cat(3, "(--", $2->code, ")");
+                    entry * e = getEntryForUnaryExprPrefix($2, "--");
                     free_entry($2);
-                    $$ = create_entry(s, "");
-                    free(s);
+                    $$ = e;
+                }
+                | exp_lv_1 INCREMENT {
+                    entry * e = getEntryForUnaryExprPrefix($1, "++");
+                    free_entry($1);
+                    $$ = e;
+                }
+                | exp_lv_1 DECREMENT {
+                    entry * e = getEntryForUnaryExprPrefix($1, "--");
+                    free_entry($1);
+                    $$ = e;
+                }
+                | NOT exp_lv_1 {
+                    entry * e = getEntryForUnaryExprPrefix($2, "!");
+                    free_entry($2);
+                    $$ = e;
                 }
                 | exp_lv_1 {
                     char * s = cat(1, $1->code);
@@ -650,9 +650,11 @@ exp_lv_1        : literal {
                 }
                 | '(' expression ')' {
                     char * s = cat(3, "(", $2->code, ")");
+                    char * t = cat(1, $2->type);
                     free_entry($2);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 | func_call {
                     char * s = cat(1, $1->code);
@@ -662,9 +664,11 @@ exp_lv_1        : literal {
                 }
                 | access {
                     char * s = cat(1, $1->code);
+                    char * t = cat(1, $1->type);
                     free_entry($1);
-                    $$ = create_entry(s, "");
+                    $$ = create_entry(s, t);
                     free(s);
+                    free(t);
                 }
                 ;
 
@@ -833,7 +837,7 @@ atrib           : ID '=' expression {
                     free(s);
                     free(t);
                 }
-                | ID INCREMENT {
+                /* | ID INCREMENT {
                     char * s = cat(2, $1, "++");
                     free($1);
                     $$ = create_entry(s, "");
@@ -844,7 +848,7 @@ atrib           : ID '=' expression {
                     free($1);
                     $$ = create_entry(s, "");
                     free(s);
-                }
+                } */
                 | access '=' expression {
                     char * s = cat(3, $1->code, "=", $3->code);
                     free_entry($1);
@@ -986,13 +990,13 @@ do_while_stmt   : DO {push_on_stack_id("@dowhile@");} block {pop_from_stack(scop
                 }
                 ;
                 
-switch_stmt     : SWITCH '(' expression ')' '{' case_stmts '}' ;
+/* switch_stmt     : SWITCH '(' expression ')' '{' case_stmts '}' ; */
 
-case_stmts      : /* vazio */
-                | case_stmt case_stmts ;
+/* case_stmts      : 
+                | case_stmt case_stmts ; */
 
-case_stmt       : CASE literal ':' stmts
-                | DEFAULT ':' stmts ;
+/* case_stmt       : CASE literal ':' stmts
+                | DEFAULT ':' stmts ; */
 
 return_stmt     : RETURN {
                     char * s = cat(1, "return");
@@ -1007,9 +1011,9 @@ return_stmt     : RETURN {
                 }
                 ;
 
-break_stmt      : BREAK ;
+break_stmt      : BREAK {$$ = create_entry("","");};
 
-continue_stmt   : CONTINUE ;
+continue_stmt   : CONTINUE {$$ = create_entry("","");};
 
 import_stmt     : IMPORT STRING ';' {
                     char * importText = cat(2, "#include ", $2);
@@ -1224,33 +1228,53 @@ char * generateId() {
 entry* getEntryForExpression(entry *firstOperand, entry *secondOperand, char * operator){
     /* printf("Generating expression for:[%s, %s, %s]\n",
     firstOperand->code,secondOperand->code,operator); */
-    
+    /* printf("entry\n"); */
     char* s;
-    if(secondOperand == NULL){
-        checkTypeUnaryExpression(firstOperand, operator);
-        s = cat(2, firstOperand->code, operator);
-        //printf("\tExpression: %s\n\tExprType: %s\n",s,firstOperand->type);
-        return create_entry(s, firstOperand->type);
+    if((strcmp(firstOperand->type, "STRING") == 0)){
+        const char* string_concat_func = "char* concat(const char* s1, const char* s2){char* r=malloc(strlen(s1)+strlen(s2)+1);if(r){strcpy(r,s1);strcat(r,s2);}return r;}";
+        if(!exists_on_table(type_table, string_concat_func)){
+        add_to_table(type_table, string_concat_func, "#IMPORT");
     }
-    else if((strcmp(firstOperand->type, "STRING") == 0)){
         if((strcmp(operator, "+") == 0) && (strcmp(secondOperand->type, "STRING") != 0)){ //segundo operando não é string
-            s = cat(5, "strcat(",firstOperand->code,", ", convertToStirng(secondOperand),")");
+            s = cat(5, "concat(",firstOperand->code,", ", convertToStirng(secondOperand),")");
         }
         else{
-            s = cat(5, "strcat(",firstOperand->code, ", ",secondOperand->code,")");
+            s = cat(5, "concat(",firstOperand->code, ", ",secondOperand->code,")");
         }
         //printf("\tExpression: %s\n\tExprType: %s\n",s,"STRING");
         return create_entry(s, "STRING");
     }
     else{
         checkTypeBinaryExpression(firstOperand, secondOperand, operator);
-        s = cat(3, firstOperand->code, operator, secondOperand->code);
+        if(strcmp(operator,"^")== 0){
+            const char * my_math_lib= "double my_exp(double x){double sum=1.0;double term=1.0;for(int n=1;n<20;++n){term*=x/n;sum+=term;}return sum;}\ndouble my_log(double x){if(x<=0.0)return -1e308;double y=(x-1)/(x+1);double y2=y*y;double sum=0.0;for(int n=1;n<20;n+=2){sum+=(1.0/n)*y;y*= y2;}return 2*sum;}\ndouble power(double bs,double exp){double r=1.0;int int_exp=(int)exp;double frac_exp=exp-int_exp;while(int_exp){if(int_exp%2)r*=bs;bs*=bs;int_exp/=2;}if(frac_exp!=0.0)r*=my_exp(frac_exp*my_log(bs));return r;}";
+            s = cat(6, "power(", firstOperand->code, "+ 0.0", ", ", secondOperand->code, " + 0.0)");
+                if(!exists_on_table(type_table, my_math_lib)){
+                    add_to_table(type_table, my_math_lib, "#IMPORT");
+                }
+                return create_entry(s, "DECIMAL");
+        }
+        else{
+            s = cat(3, firstOperand->code, operator, secondOperand->code);
+        }
+        
         //printf("\tExpression: %s\n\tExprType: %s\n",s,firstOperand->type);
         return create_entry(s, firstOperand->type);
     }
 
-    } 
+} 
 
+entry* getEntryForUnaryExprPrefix(entry *operand, char * operator){
+    checkTypeUnaryExpression(operand, operator);
+    char* s = cat(4, "(", operator, operand->code, ")");
+    return create_entry(s, operand->type);
+}
+
+entry* getEntryForUnaryExprSufix(entry *operand, char * operator){
+    checkTypeUnaryExpression(operand, operator);
+    char* s = cat(4, "(", operand->code, operator, ")");
+    return create_entry(s, operand->type);
+}
 
 char* convertToStirng(entry *operand){
     const char* string_conversion_lib = "#define BUF_SZ 50\nstatic char buf[BUF_SZ];\nconst char *d_to_s(double v){snprintf(buf, BUF_SZ, \"%f\", v);return buf;}\nconst char *b_to_s(int v){return v ? \"true\" : \"false\";}\nconst char *i_to_s(long v){snprintf(buf, BUF_SZ, \"%ld\", v);return buf;}\nconst char *c_to_s(char v){snprintf(buf, BUF_SZ, \"%c\", v);return buf;}";
@@ -1298,13 +1322,13 @@ void checkTypeUnaryExpression(entry *firstOperand, char* operator){
 }
 
 int isTypeValidForOperator(char* type, char* operator){
-    char *intValidOperands[] = { "+", "-", "/", "*","%", "==","!=",">","<",">=","<=","++","--" };
+    char *intValidOperands[] = { "+", "-", "/", "/-", "*", "*-", "%", "^", "==","!=",">","<",">=","<=","++","--" };
     int isValidForInt = (strcmp(type, "INTEGER") == 0) && strBelongsToStrArray(operator,intValidOperands , sizeof(intValidOperands)/sizeof(intValidOperands[0]));
 
-    char *decimalValidOperands[] = { "+", "-", "/", "*", "^", "==","!=",">","<",">=","<=" };
+    char *decimalValidOperands[] = { "+", "-", "/", "/-", "*", "*-", "^", "==","!=",">","<",">=","<=" };
     int isValidForDecimal = (strcmp(type, "DECIMAL") == 0) && strBelongsToStrArray(operator,decimalValidOperands , sizeof(decimalValidOperands)/sizeof(decimalValidOperands[0]));
 
-    char *boolValidOperands[] = {"==","!=",">","<",">=","<=", "&&", "||"};
+    char *boolValidOperands[] = {"==","!=", "&&", "||", "!"};
     int isValidForBool = (strcmp(type, "BOOLEAN") == 0) && strBelongsToStrArray(operator,boolValidOperands, sizeof(boolValidOperands)/sizeof(boolValidOperands[0]));
 
     char *charValidOperands[] = {"+", "-", "/", "*","%", "==","!=",">","<",">=","<="};
