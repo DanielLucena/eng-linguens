@@ -655,6 +655,11 @@ exp_lv_2        : DOLLAR exp_lv_1 {
                     free_entry($2);
                     $$ = e;
                 }
+                | MINUS exp_lv_1 {
+                    entry * e = getEntryForUnaryExprPrefix($2, "-");
+                    free_entry($2);
+                    $$ = e;
+                }
                 | exp_lv_1 {
                     char * s = cat(1, $1->code);
                     char * t = cat(1, $1->type);
@@ -1502,7 +1507,13 @@ entry* getEntryForExpression(entry *firstOperand, entry *secondOperand, char * o
 
 entry* getEntryForUnaryExprPrefix(entry *operand, char * operator){
     checkTypeUnaryExpression(operand, operator);
-    char* s = cat(4, "(", operator, operand->code, ")");
+    char* s;
+    if(strcmp(operator,"-")== 0){
+        s = cat(4, "(", operator , operand->code, ")");
+    }
+    else{
+        s = cat(4, "(", operator, operand->code, ")");
+    }
     return create_entry(s, operand->type);
 }
 

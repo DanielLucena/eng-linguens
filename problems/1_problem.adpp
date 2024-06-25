@@ -1,9 +1,9 @@
 program prob1 { 
     decimal x = 2.5;
-    decimal y = 3.7;
+    decimal y = -3.7;
     int c = 5;
 
     decimal result = x ^ 2 - y + c;
-    
+    output("y: " + y);
     output("Result: " + result);
 }
